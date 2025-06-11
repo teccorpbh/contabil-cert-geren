@@ -22,7 +22,7 @@ const ComissaoModal = ({ isOpen, onClose, onSave, comissao, mode }: ComissaoModa
     indicador: '',
     valor: '',
     percentual: '',
-    status: 'Pendente' as const,
+    status: 'Pendente' as 'Pendente' | 'Paga',
     dataPagamento: '',
     observacoes: ''
   });
@@ -98,7 +98,7 @@ const ComissaoModal = ({ isOpen, onClose, onSave, comissao, mode }: ComissaoModa
 
           <div>
             <Label>Status</Label>
-            <Select value={formData.status} onValueChange={(value: any) => setFormData({...formData, status: value})} disabled={isReadOnly}>
+            <Select value={formData.status} onValueChange={(value: 'Pendente' | 'Paga') => setFormData({...formData, status: value})} disabled={isReadOnly}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

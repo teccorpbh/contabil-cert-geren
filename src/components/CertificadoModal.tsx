@@ -21,7 +21,7 @@ const CertificadoModal = ({ isOpen, onClose, onSave, certificado, mode }: Certif
     documento: '',
     cliente: '',
     validade: '',
-    status: 'Pendente' as const,
+    status: 'Pendente' as 'Pendente' | 'Emitido' | 'Cancelado',
     diasVencimento: 0,
     vendaId: ''
   });
@@ -103,7 +103,7 @@ const CertificadoModal = ({ isOpen, onClose, onSave, certificado, mode }: Certif
 
           <div>
             <Label>Status</Label>
-            <Select value={formData.status} onValueChange={(value: any) => setFormData({...formData, status: value})} disabled={isReadOnly}>
+            <Select value={formData.status} onValueChange={(value: 'Pendente' | 'Emitido' | 'Cancelado') => setFormData({...formData, status: value})} disabled={isReadOnly}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

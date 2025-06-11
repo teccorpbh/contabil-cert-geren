@@ -22,7 +22,7 @@ const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) =
     valor: '',
     responsavel: '',
     indicador: '',
-    status: 'Pendente' as const,
+    status: 'Pendente' as 'Pendente' | 'Emitido' | 'Cancelado',
     data: new Date().toLocaleDateString('pt-BR')
   });
 
@@ -111,7 +111,7 @@ const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) =
 
           <div>
             <Label>Status</Label>
-            <Select value={formData.status} onValueChange={(value: any) => setFormData({...formData, status: value})} disabled={isReadOnly}>
+            <Select value={formData.status} onValueChange={(value: 'Pendente' | 'Emitido' | 'Cancelado') => setFormData({...formData, status: value})} disabled={isReadOnly}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
