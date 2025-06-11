@@ -22,8 +22,11 @@ const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) =
     valor: '',
     responsavel: '',
     indicador: '',
+    indicadorId: '',
     status: 'Pendente' as 'Pendente' | 'Emitido' | 'Cancelado',
-    data: new Date().toLocaleDateString('pt-BR')
+    statusPagamento: 'Pendente' as 'Pendente' | 'Pago' | 'Vencido',
+    data: new Date().toLocaleDateString('pt-BR'),
+    dataVencimento: ''
   });
 
   useEffect(() => {
@@ -34,8 +37,11 @@ const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) =
         valor: venda.valor,
         responsavel: venda.responsavel,
         indicador: venda.indicador,
+        indicadorId: venda.indicadorId || '',
         status: venda.status,
-        data: venda.data
+        statusPagamento: venda.statusPagamento,
+        data: venda.data,
+        dataVencimento: venda.dataVencimento || ''
       });
     }
   }, [venda]);
@@ -102,11 +108,17 @@ const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) =
 
           <div>
             <Label>Indicador</Label>
-            <Input
-              value={formData.indicador}
-              onChange={(e) => setFormData({...formData, indicador: e.target.value})}
-              disabled={isReadOnly}
-            />
+            <Select value={formData.indicador} onValueChange={(value) => setFormData({...formData, indicador: value})} disabled={isReadOnly}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Maria Santos">Maria Santos</SelectItem>
+                <SelectItem value="Pedro Lima">Pedro Lima</SelectItem>
+                <SelectItem value="Lucas Ferreira">Lucas Ferreira</SelectItem>
+                <SelectItem value="-">Sem indicador</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
@@ -122,6 +134,32 @@ const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) =
               </SelectContent>
             </Select>
           </div>
+
+          <div>
+            <Label>Status de Pagamento</Label>
+            <Select value={formData.statusPagamento} onValueChange={(value: 'Pendente' | 'Pago' | 'Vencido') => setFormData({...formData, statusPagamento: value})} disabled={isReadOnly}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Pendente">Pendente</SelectItem>
+                <SelectItem value="Pago">Pago</SelectItem>
+                <SelectItem value="Vencido">Vencido</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {(formData.statusPagamento === 'Pendente' || formData.statusPagamento === 'Vencido') && (
+            <div>
+              <Label>Data de Vencimento</Label>
+              <Input
+                type="date"
+                value={formData.dataVencimento}
+                onChange={(e) => setFormData({...formData, dataVencimento: e.target.value})}
+                disabled={isReadOnly}
+              />
+            </div>
+          )}
         </div>
 
         <DialogFooter>

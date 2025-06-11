@@ -8,8 +8,11 @@ export interface Venda {
   valor: string;
   responsavel: string;
   indicador: string;
+  indicadorId?: string;
   status: 'Pendente' | 'Emitido' | 'Cancelado';
+  statusPagamento: 'Pendente' | 'Pago' | 'Vencido';
   data: string;
+  dataVencimento?: string;
 }
 
 export const useVendas = () => {
@@ -21,8 +24,11 @@ export const useVendas = () => {
       valor: "R$ 450,00",
       responsavel: "João Silva",
       indicador: "Maria Santos",
+      indicadorId: "IND001",
       status: "Pendente",
-      data: "15/01/2024"
+      statusPagamento: "Pendente",
+      data: "15/01/2024",
+      dataVencimento: "30/01/2024"
     },
     {
       id: "V002",
@@ -31,8 +37,11 @@ export const useVendas = () => {
       valor: "R$ 320,00",
       responsavel: "Ana Costa",
       indicador: "Pedro Lima",
+      indicadorId: "IND002",
       status: "Emitido",
-      data: "14/01/2024"
+      statusPagamento: "Pago",
+      data: "14/01/2024",
+      dataVencimento: "29/01/2024"
     },
     {
       id: "V003",
@@ -42,7 +51,9 @@ export const useVendas = () => {
       responsavel: "Carlos Oliveira",
       indicador: "-",
       status: "Cancelado",
-      data: "13/01/2024"
+      statusPagamento: "Vencido",
+      data: "13/01/2024",
+      dataVencimento: "28/01/2024"
     }
   ]);
 
