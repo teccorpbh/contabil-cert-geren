@@ -6,14 +6,17 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Users, TrendingUp, AlertTriangle, DollarSign, Calendar } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const navigate = useNavigate();
+
   const handleNovaVenda = () => {
-    console.log("Nova venda");
+    navigate("/vendas/nova");
   };
 
   const handleRelatorios = () => {
-    console.log("Relatórios");
+    navigate("/relatorios");
   };
 
   return (
@@ -21,11 +24,11 @@ const Index = () => {
       <Navigation 
         brand={{ name: "Contabilcert", icon: FileText }}
         items={[
-          { label: "Dashboard" },
-          { label: "Vendas" },
-          { label: "Certificados" },
-          { label: "Comissões" },
-          { label: "Relatórios" }
+          { label: "Dashboard", href: "/" },
+          { label: "Vendas", href: "/vendas" },
+          { label: "Certificados", href: "/certificados" },
+          { label: "Comissões", href: "/comissoes" },
+          { label: "Relatórios", href: "/relatorios" }
         ]}
         actions={[{ label: "Nova Venda", onClick: handleNovaVenda }]}
       />
@@ -126,7 +129,7 @@ const Index = () => {
         <div className="bg-slate-50 rounded-lg p-8">
           <h3 className="text-xl font-semibold text-slate-900 mb-6">Ações Rápidas</h3>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Button className="h-16 flex-col gap-2" variant="outline">
+            <Button className="h-16 flex-col gap-2" variant="outline" onClick={() => navigate("/vendas/nova")}>
               <TrendingUp className="h-5 w-5" />
               Nova Venda
             </Button>
@@ -138,7 +141,7 @@ const Index = () => {
               <DollarSign className="h-5 w-5" />
               Pagar Certificadora
             </Button>
-            <Button className="h-16 flex-col gap-2" variant="outline">
+            <Button className="h-16 flex-col gap-2" variant="outline" onClick={() => navigate("/relatorios")}>
               <Calendar className="h-5 w-5" />
               Relatórios
             </Button>

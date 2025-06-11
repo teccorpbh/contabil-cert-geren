@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Plus, Eye, Edit, Trash } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -15,6 +16,8 @@ import {
 } from "@/components/ui/table";
 
 const Vendas = () => {
+  const navigate = useNavigate();
+
   const vendas = [
     {
       id: "V001",
@@ -62,13 +65,13 @@ const Vendas = () => {
       <Navigation 
         brand={{ name: "Contabilcert", icon: FileText }}
         items={[
-          { label: "Dashboard" },
-          { label: "Vendas" },
-          { label: "Certificados" },
-          { label: "Comissões" },
-          { label: "Relatórios" }
+          { label: "Dashboard", href: "/" },
+          { label: "Vendas", href: "/vendas" },
+          { label: "Certificados", href: "/certificados" },
+          { label: "Comissões", href: "/comissoes" },
+          { label: "Relatórios", href: "/relatorios" }
         ]}
-        actions={[{ label: "Nova Venda" }]}
+        actions={[{ label: "Nova Venda", href: "/vendas/nova" }]}
       />
 
       <div className="container mx-auto px-6 py-8">
@@ -77,7 +80,7 @@ const Vendas = () => {
             <h1 className="text-3xl font-bold text-slate-900">Vendas</h1>
             <p className="text-slate-600 mt-2">Gerencie todas as vendas de certificados digitais</p>
           </div>
-          <Button className="bg-indigo-600 hover:bg-indigo-700">
+          <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={() => navigate("/vendas/nova")}>
             <Plus className="h-4 w-4 mr-2" />
             Nova Venda
           </Button>

@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface NavigationItem {
   label: string;
@@ -27,10 +28,10 @@ const Navigation = ({
   return (
     <header className="container mx-auto px-6 py-8">
       <nav className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
+        <Link to="/" className="flex items-center space-x-2">
           <IconComponent className="h-8 w-8 text-indigo-600" />
           <span className="text-2xl font-bold text-slate-900">{brand.name}</span>
-        </div>
+        </Link>
         
         <div className="flex items-center space-x-4">
           {items.map((item, index) => (
@@ -41,7 +42,11 @@ const Navigation = ({
               onClick={item.onClick}
               asChild={!!item.href}
             >
-              {item.href ? <a href={item.href}>{item.label}</a> : item.label}
+              {item.href ? (
+                <Link to={item.href}>{item.label}</Link>
+              ) : (
+                <span onClick={item.onClick}>{item.label}</span>
+              )}
             </Button>
           ))}
           
@@ -52,7 +57,11 @@ const Navigation = ({
               onClick={action.onClick}
               asChild={!!action.href}
             >
-              {action.href ? <a href={action.href}>{action.label}</a> : action.label}
+              {action.href ? (
+                <Link to={action.href}>{action.label}</Link>
+              ) : (
+                <span onClick={action.onClick}>{action.label}</span>
+              )}
             </Button>
           ))}
         </div>

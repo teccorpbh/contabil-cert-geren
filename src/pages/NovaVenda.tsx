@@ -30,13 +30,13 @@ const NovaVenda = () => {
       <Navigation 
         brand={{ name: "Contabilcert", icon: FileText }}
         items={[
-          { label: "Dashboard" },
-          { label: "Vendas" },
-          { label: "Certificados" },
-          { label: "Comissões" },
-          { label: "Relatórios" }
+          { label: "Dashboard", href: "/" },
+          { label: "Vendas", href: "/vendas" },
+          { label: "Certificados", href: "/certificados" },
+          { label: "Comissões", href: "/comissoes" },
+          { label: "Relatórios", href: "/relatorios" }
         ]}
-        actions={[{ label: "Nova Venda" }]}
+        actions={[{ label: "Nova Venda", href: "/vendas/nova" }]}
       />
 
       <div className="container mx-auto px-6 py-8">
