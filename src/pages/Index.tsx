@@ -1,94 +1,158 @@
 
-import { Button } from "@/components/ui/button";
+import Layout from "@/components/Layout";
+import Navigation from "@/components/Navigation";
+import Hero from "@/components/Hero";
 import { Card } from "@/components/ui/card";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { FileText, Users, TrendingUp, AlertTriangle, DollarSign, Calendar } from "lucide-react";
 
 const Index = () => {
+  const handleNovaVenda = () => {
+    console.log("Nova venda");
+  };
+
+  const handleRelatorios = () => {
+    console.log("Relatórios");
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Header */}
-      <header className="container mx-auto px-6 py-8">
-        <nav className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Sparkles className="h-8 w-8 text-indigo-600" />
-            <span className="text-2xl font-bold text-slate-900">Seu Projeto</span>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" className="text-slate-600 hover:text-slate-900">
-              Sobre
-            </Button>
-            <Button className="bg-indigo-600 hover:bg-indigo-700">
-              Começar
-            </Button>
-          </div>
-        </nav>
-      </header>
+    <Layout>
+      <Navigation 
+        brand={{ name: "Contabilcert", icon: FileText }}
+        items={[
+          { label: "Dashboard" },
+          { label: "Vendas" },
+          { label: "Certificados" },
+          { label: "Comissões" },
+          { label: "Relatórios" }
+        ]}
+        actions={[{ label: "Nova Venda", onClick: handleNovaVenda }]}
+      />
+      
+      <Hero
+        title="Sistema de Gerenciamento"
+        subtitle="Certificados Digitais"
+        description="Gerencie vendas, certificados, comissões e pagamentos de forma integrada e automatizada."
+        primaryAction={{
+          text: "Nova Venda",
+          onClick: handleNovaVenda
+        }}
+        secondaryAction={{
+          text: "Ver Relatórios",
+          onClick: handleRelatorios
+        }}
+      />
 
-      {/* Main Content */}
-      <main className="container mx-auto px-6 py-16">
-        <div className="text-center max-w-4xl mx-auto">
-          <h1 className="text-5xl md:text-6xl font-bold text-slate-900 mb-6 leading-tight">
-            Bem-vindo ao seu
-            <span className="text-indigo-600 block">Projeto em Branco</span>
-          </h1>
-          
-          <p className="text-xl text-slate-600 mb-12 max-w-2xl mx-auto leading-relaxed">
-            Este é o ponto de partida perfeito para criar algo incrível. 
-            Comece a personalizar e construir sua aplicação dos sonhos.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <Button size="lg" className="bg-indigo-600 hover:bg-indigo-700 text-lg px-8 py-4">
-              Começar a Construir
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8 py-4 border-slate-300 hover:bg-slate-50">
-              Ver Exemplos
-            </Button>
-          </div>
-
-          {/* Feature Cards */}
-          <div className="grid md:grid-cols-3 gap-8 mt-20">
-            <Card className="p-8 border-none shadow-lg bg-white/80 backdrop-blur hover:shadow-xl transition-all duration-300">
-              <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-6 mx-auto">
-                <Sparkles className="h-6 w-6 text-indigo-600" />
+      {/* Dashboard Metrics */}
+      <section className="container mx-auto px-6 py-16">
+        <h2 className="text-3xl font-bold text-slate-900 mb-8 text-center">Dashboard</h2>
+        
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          {/* Vendas */}
+          <Card className="p-6 border-none shadow-lg bg-white hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <TrendingUp className="h-6 w-6 text-green-600" />
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-4">Moderno</h3>
-              <p className="text-slate-600">
-                Construído com as tecnologias mais recentes: React, TypeScript e Tailwind CSS.
-              </p>
-            </Card>
+              <Badge className="bg-green-100 text-green-800">Este mês</Badge>
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900 mb-2">156</h3>
+            <p className="text-slate-600">Vendas realizadas</p>
+          </Card>
 
-            <Card className="p-8 border-none shadow-lg bg-white/80 backdrop-blur hover:shadow-xl transition-all duration-300">
-              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-6 mx-auto">
-                <ArrowRight className="h-6 w-6 text-emerald-600" />
+          {/* Certificados Vencendo */}
+          <Card className="p-6 border-none shadow-lg bg-white hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <AlertTriangle className="h-6 w-6 text-orange-600" />
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-4">Responsivo</h3>
-              <p className="text-slate-600">
-                Design que funciona perfeitamente em todos os dispositivos e tamanhos de tela.
-              </p>
-            </Card>
+              <Badge className="bg-orange-100 text-orange-800">30 dias</Badge>
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900 mb-2">23</h3>
+            <p className="text-slate-600">Certificados vencendo</p>
+          </Card>
 
-            <Card className="p-8 border-none shadow-lg bg-white/80 backdrop-blur hover:shadow-xl transition-all duration-300">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-6 mx-auto">
-                <Sparkles className="h-6 w-6 text-purple-600" />
+          {/* Comissões Pendentes */}
+          <Card className="p-6 border-none shadow-lg bg-white hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <DollarSign className="h-6 w-6 text-blue-600" />
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-4">Customizável</h3>
-              <p className="text-slate-600">
-                Fácil de personalizar e estender com componentes reutilizáveis.
-              </p>
-            </Card>
+              <Badge className="bg-blue-100 text-blue-800">Pendente</Badge>
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900 mb-2">R$ 8.450</h3>
+            <p className="text-slate-600">Comissões a pagar</p>
+          </Card>
+
+          {/* Pagamentos Pendentes */}
+          <Card className="p-6 border-none shadow-lg bg-white hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                <Calendar className="h-6 w-6 text-red-600" />
+              </div>
+              <Badge className="bg-red-100 text-red-800">Atrasado</Badge>
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900 mb-2">R$ 12.300</h3>
+            <p className="text-slate-600">Pagamentos em atraso</p>
+          </Card>
+
+          {/* Clientes */}
+          <Card className="p-6 border-none shadow-lg bg-white hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Users className="h-6 w-6 text-purple-600" />
+              </div>
+              <Badge className="bg-purple-100 text-purple-800">Total</Badge>
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900 mb-2">1.247</h3>
+            <p className="text-slate-600">Clientes cadastrados</p>
+          </Card>
+
+          {/* NFSe Emitidas */}
+          <Card className="p-6 border-none shadow-lg bg-white hover:shadow-xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                <FileText className="h-6 w-6 text-indigo-600" />
+              </div>
+              <Badge className="bg-indigo-100 text-indigo-800">Este mês</Badge>
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900 mb-2">142</h3>
+            <p className="text-slate-600">NFSe emitidas</p>
+          </Card>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-slate-50 rounded-lg p-8">
+          <h3 className="text-xl font-semibold text-slate-900 mb-6">Ações Rápidas</h3>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Button className="h-16 flex-col gap-2" variant="outline">
+              <TrendingUp className="h-5 w-5" />
+              Nova Venda
+            </Button>
+            <Button className="h-16 flex-col gap-2" variant="outline">
+              <FileText className="h-5 w-5" />
+              Emitir Cobrança
+            </Button>
+            <Button className="h-16 flex-col gap-2" variant="outline">
+              <DollarSign className="h-5 w-5" />
+              Pagar Certificadora
+            </Button>
+            <Button className="h-16 flex-col gap-2" variant="outline">
+              <Calendar className="h-5 w-5" />
+              Relatórios
+            </Button>
           </div>
         </div>
-      </main>
+      </section>
 
       {/* Footer */}
       <footer className="container mx-auto px-6 py-12 mt-20">
         <div className="text-center text-slate-500">
-          <p>&copy; 2024 Seu Projeto. Feito com ❤️ usando Lovable.</p>
+          <p>&copy; 2024 Contabilcert. Sistema de Gerenciamento de Certificados Digitais.</p>
         </div>
       </footer>
-    </div>
+    </Layout>
   );
 };
 
