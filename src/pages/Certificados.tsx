@@ -1,10 +1,12 @@
 
+import { useState } from "react";
 import Layout from "@/components/Layout";
 import Navigation from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Eye, Edit, Trash, AlertTriangle } from "lucide-react";
+import { FileText, Eye, Edit, Trash, AlertTriangle, Plus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import {
   Table,
   TableBody,
@@ -13,40 +15,27 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useCertificados } from "@/hooks/useCertificados";
+import CertificadoModal from "@/components/CertificadoModal";
 
 const Certificados = () => {
-  const certificados = [
-    {
-      id: "CERT001",
-      tipo: "A1 - Pessoa Física",
-      documento: "123.456.789-00",
-      cliente: "João Silva",
-      validade: "15/01/2025",
-      status: "Emitido",
-      diasVencimento: 35,
-      vendaId: "V001"
-    },
-    {
-      id: "CERT002",
-      tipo: "A3 - Pessoa Jurídica",
-      documento: "12.345.678/0001-90",
-      cliente: "Empresa ABC Ltda",
-      validade: "25/02/2024",
-      status: "Pendente",
-      diasVencimento: -5,
-      vendaId: "V002"
-    },
-    {
-      id: "CERT003",
-      tipo: "A1 - Pessoa Física",
-      documento: "987.654.321-00",
-      cliente: "Maria Santos",
-      validade: "10/03/2024",
-      status: "Cancelado",
-      diasVencimento: -15,
-      vendaId: "V003"
-    }
-  ];
+  const { toast } = useToast();
+  const { certificados, createCertificado, updateCertificado, deleteCertificado, getCertificado } = useCertificados();
+  
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
+  const [selectedCertificado, setSelectedCertificado] = useState<any>(null);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -62,6 +51,50 @@ const Certificados = () => {
     if (dias <= 30) return "bg-orange-100 text-orange-800";
     if (dias <= 60) return "bg-yellow-100 text-yellow-800";
     return "bg-green-100 text-green-800";
+  };
+
+  const handleCreate = () => {
+    setSelectedCertificado(null);
+    setModalMode('create');
+    setModalOpen(true);
+  };
+
+  const handleView = (id: string) => {
+    const certificado = getCertificado(id);
+    setSelectedCertificado(certificado);
+    setModalMode('view');
+    setModalOpen(true);
+  };
+
+  const handleEdit = (id: string) => {
+    const certificado = getCertificado(id);
+    setSelectedCertificado(certificado);
+    setModalMode('edit');
+    setModalOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    deleteCertificado(id);
+    toast({
+      title: "Certificado excluído",
+      description: "O certificado foi excluído com sucesso."
+    });
+  };
+
+  const handleSave = (certificadoData: any) => {
+    if (modalMode === 'create') {
+      createCertificado(certificadoData);
+      toast({
+        title: "Certificado criado",
+        description: "O certificado foi criado com sucesso."
+      });
+    } else if (modalMode === 'edit' && selectedCertificado) {
+      updateCertificado(selectedCertificado.id, certificadoData);
+      toast({
+        title: "Certificado atualizado",
+        description: "O certificado foi atualizado com sucesso."
+      });
+    }
   };
 
   return (
@@ -84,6 +117,10 @@ const Certificados = () => {
             <h1 className="text-3xl font-bold text-slate-900">Certificados</h1>
             <p className="text-slate-600 mt-2">Gerencie todos os certificados digitais emitidos</p>
           </div>
+          <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={handleCreate}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Certificado
+          </Button>
         </div>
 
         <Card className="p-6">
@@ -123,12 +160,33 @@ const Certificados = () => {
                   <TableCell>{cert.vendaId}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" onClick={() => handleView(cert.id)}>
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(cert.id)}>
                         <Edit className="h-4 w-4" />
                       </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="outline">
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Tem certeza que deseja excluir este certificado? Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(cert.id)}>
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                       {cert.diasVencimento <= 30 && cert.status === "Emitido" && (
                         <Button size="sm" variant="outline" className="text-orange-600">
                           <AlertTriangle className="h-4 w-4" />
@@ -142,6 +200,14 @@ const Certificados = () => {
           </Table>
         </Card>
       </div>
+
+      <CertificadoModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSave={handleSave}
+        certificado={selectedCertificado}
+        mode={modalMode}
+      />
     </Layout>
   );
 };

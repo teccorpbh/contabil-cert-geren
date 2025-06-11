@@ -1,10 +1,12 @@
 
+import { useState } from "react";
 import Layout from "@/components/Layout";
 import Navigation from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus, Eye, DollarSign } from "lucide-react";
+import { FileText, Eye, Edit, Trash, Plus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import {
   Table,
   TableBody,
@@ -13,49 +15,27 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useComissoes } from "@/hooks/useComissoes";
+import ComissaoModal from "@/components/ComissaoModal";
 
 const Comissoes = () => {
-  const comissoes = [
-    {
-      id: "COM001",
-      indicador: "Maria Santos",
-      tipoIndicador: "Pessoa Física",
-      documento: "123.456.789-00",
-      vendaId: "V001",
-      cliente: "Empresa ABC Ltda",
-      valorVenda: "R$ 450,00",
-      percentual: "10%",
-      valorComissao: "R$ 45,00",
-      status: "Pendente",
-      dataVenda: "15/01/2024"
-    },
-    {
-      id: "COM002",
-      indicador: "Pedro Lima",
-      tipoIndicador: "Pessoa Física",
-      documento: "987.654.321-00",
-      vendaId: "V002",
-      cliente: "Tech Solutions ME",
-      valorVenda: "R$ 320,00",
-      percentual: "15%",
-      valorComissao: "R$ 48,00",
-      status: "Paga",
-      dataVenda: "14/01/2024"
-    },
-    {
-      id: "COM003",
-      indicador: "Consultoria XYZ",
-      tipoIndicador: "Pessoa Jurídica",
-      documento: "11.222.333/0001-44",
-      vendaId: "V004",
-      cliente: "Indústria DEF",
-      valorVenda: "R$ 580,00",
-      percentual: "12%",
-      valorComissao: "R$ 69,60",
-      status: "Pendente",
-      dataVenda: "13/01/2024"
-    }
-  ];
+  const { toast } = useToast();
+  const { comissoes, createComissao, updateComissao, deleteComissao, getComissao } = useComissoes();
+  
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
+  const [selectedComissao, setSelectedComissao] = useState<any>(null);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -65,9 +45,57 @@ const Comissoes = () => {
     }
   };
 
+  const handleCreate = () => {
+    setSelectedComissao(null);
+    setModalMode('create');
+    setModalOpen(true);
+  };
+
+  const handleView = (id: string) => {
+    const comissao = getComissao(id);
+    setSelectedComissao(comissao);
+    setModalMode('view');
+    setModalOpen(true);
+  };
+
+  const handleEdit = (id: string) => {
+    const comissao = getComissao(id);
+    setSelectedComissao(comissao);
+    setModalMode('edit');
+    setModalOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    deleteComissao(id);
+    toast({
+      title: "Comissão excluída",
+      description: "A comissão foi excluída com sucesso."
+    });
+  };
+
+  const handleSave = (comissaoData: any) => {
+    if (modalMode === 'create') {
+      createComissao(comissaoData);
+      toast({
+        title: "Comissão criada",
+        description: "A comissão foi criada com sucesso."
+      });
+    } else if (modalMode === 'edit' && selectedComissao) {
+      updateComissao(selectedComissao.id, comissaoData);
+      toast({
+        title: "Comissão atualizada",
+        description: "A comissão foi atualizada com sucesso."
+      });
+    }
+  };
+
   const totalPendente = comissoes
-    .filter(c => c.status === "Pendente")
-    .reduce((acc, c) => acc + parseFloat(c.valorComissao.replace("R$ ", "").replace(",", ".")), 0);
+    .filter(c => c.status === 'Pendente')
+    .reduce((acc, c) => acc + parseFloat(c.valor.replace('R$ ', '').replace(',', '.')), 0);
+
+  const totalPago = comissoes
+    .filter(c => c.status === 'Paga')
+    .reduce((acc, c) => acc + parseFloat(c.valor.replace('R$ ', '').replace(',', '.')), 0);
 
   return (
     <Layout>
@@ -87,50 +115,27 @@ const Comissoes = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Comissões</h1>
-            <p className="text-slate-600 mt-2">Gerencie comissões de indicadores</p>
+            <p className="text-slate-600 mt-2">Gerencie todas as comissões de vendas</p>
           </div>
-          <Button className="bg-indigo-600 hover:bg-indigo-700">
+          <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={handleCreate}>
             <Plus className="h-4 w-4 mr-2" />
-            Novo Indicador
+            Nova Comissão
           </Button>
         </div>
 
-        {/* Resumo de Comissões */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        {/* Cards de resumo */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-600">Total Pago</p>
-                <p className="text-2xl font-bold text-slate-900">R$ 48,00</p>
-              </div>
-            </div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Total Pendente</h3>
+            <p className="text-3xl font-bold text-yellow-600">R$ {totalPendente.toFixed(2)}</p>
           </Card>
-
           <Card className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-600">Total Pendente</p>
-                <p className="text-2xl font-bold text-slate-900">R$ {totalPendente.toFixed(2).replace(".", ",")}</p>
-              </div>
-            </div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Total Pago</h3>
+            <p className="text-3xl font-bold text-green-600">R$ {totalPago.toFixed(2)}</p>
           </Card>
-
           <Card className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-600">Total Comissões</p>
-                <p className="text-2xl font-bold text-slate-900">R$ {(totalPendente + 48).toFixed(2).replace(".", ",")}</p>
-              </div>
-            </div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Comissões Ativas</h3>
+            <p className="text-3xl font-bold text-indigo-600">{comissoes.length}</p>
           </Card>
         </div>
 
@@ -139,15 +144,12 @@ const Comissoes = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>ID</TableHead>
-                <TableHead>Indicador</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>CPF/CNPJ</TableHead>
                 <TableHead>Venda</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Valor Venda</TableHead>
-                <TableHead>%</TableHead>
-                <TableHead>Comissão</TableHead>
+                <TableHead>Indicador</TableHead>
+                <TableHead>Valor</TableHead>
+                <TableHead>Percentual</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Data Pagamento</TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -155,29 +157,45 @@ const Comissoes = () => {
               {comissoes.map((comissao) => (
                 <TableRow key={comissao.id}>
                   <TableCell className="font-medium">{comissao.id}</TableCell>
-                  <TableCell>{comissao.indicador}</TableCell>
-                  <TableCell>{comissao.tipoIndicador}</TableCell>
-                  <TableCell>{comissao.documento}</TableCell>
                   <TableCell>{comissao.vendaId}</TableCell>
-                  <TableCell>{comissao.cliente}</TableCell>
-                  <TableCell>{comissao.valorVenda}</TableCell>
+                  <TableCell>{comissao.indicador}</TableCell>
+                  <TableCell>{comissao.valor}</TableCell>
                   <TableCell>{comissao.percentual}</TableCell>
-                  <TableCell className="font-medium">{comissao.valorComissao}</TableCell>
                   <TableCell>
                     <Badge className={getStatusColor(comissao.status)}>
                       {comissao.status}
                     </Badge>
                   </TableCell>
+                  <TableCell>{comissao.dataPagamento || '-'}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" onClick={() => handleView(comissao.id)}>
                         <Eye className="h-4 w-4" />
                       </Button>
-                      {comissao.status === "Pendente" && (
-                        <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
-                          <DollarSign className="h-4 w-4" />
-                        </Button>
-                      )}
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(comissao.id)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="outline">
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Tem certeza que deseja excluir esta comissão? Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(comissao.id)}>
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -186,6 +204,14 @@ const Comissoes = () => {
           </Table>
         </Card>
       </div>
+
+      <ComissaoModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSave={handleSave}
+        comissao={selectedComissao}
+        mode={modalMode}
+      />
     </Layout>
   );
 };
