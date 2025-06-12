@@ -66,7 +66,8 @@ const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) =
     const selectedIndicador = indicadores.find(ind => ind.id === formData.indicadorId);
     const saveData = {
       ...formData,
-      indicador: selectedIndicador?.nome || '-'
+      indicador: selectedIndicador?.nome || '-',
+      indicadorId: formData.indicadorId === 'none' ? '' : formData.indicadorId
     };
     onSave(saveData);
     onClose();
@@ -131,7 +132,7 @@ const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) =
           <div>
             <Label>Indicador</Label>
             <Select 
-              value={formData.indicadorId} 
+              value={formData.indicadorId || 'none'} 
               onValueChange={(value) => setFormData({...formData, indicadorId: value})} 
               disabled={isReadOnly}
             >
@@ -139,7 +140,7 @@ const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) =
                 <SelectValue placeholder="Selecione um indicador" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Sem indicador</SelectItem>
+                <SelectItem value="none">Sem indicador</SelectItem>
                 {indicadores
                   .filter(ind => ind.status === 'Ativo')
                   .map((indicador) => (
