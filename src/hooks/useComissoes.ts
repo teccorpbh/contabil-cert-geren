@@ -71,6 +71,10 @@ export const useComissoes = () => {
     fetchComissoes();
   }, [user]);
 
+  const getComissao = (id: string): Comissao | undefined => {
+    return comissoes.find(comissao => comissao.id === id);
+  };
+
   const createComissao = async (comissao: Omit<Comissao, 'id'>) => {
     if (!user) return;
 
@@ -168,6 +172,7 @@ export const useComissoes = () => {
   return {
     comissoes,
     loading,
+    getComissao,
     createComissao,
     updateComissao,
     deleteComissao,
