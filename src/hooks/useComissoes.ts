@@ -8,9 +8,10 @@ export interface Comissao {
   id: string;
   vendaId: string;
   indicador: string;
+  indicadorId: string;
   valor: string;
   percentual: string;
-  status: 'Paga' | 'Pendente';
+  status: 'Pendente' | 'Paga';
   dataPagamento?: string;
   observacoes?: string;
 }
@@ -32,6 +33,9 @@ export const useComissoes = () => {
           *,
           indicadores (
             nome
+          ),
+          vendas (
+            pedido_segura
           )
         `)
         .order('created_at', { ascending: false });
@@ -41,12 +45,13 @@ export const useComissoes = () => {
       const mappedComissoes: Comissao[] = data.map(item => ({
         id: item.id,
         vendaId: item.venda_id,
-        indicador: item.indicadores?.nome || 'Indicador não encontrado',
+        indicador: item.indicadores?.nome || 'N/A',
+        indicadorId: item.indicador_id,
         valor: `R$ ${Number(item.valor).toFixed(2).replace('.', ',')}`,
         percentual: `${item.percentual}%`,
         status: item.status,
         dataPagamento: item.data_pagamento ? new Date(item.data_pagamento).toLocaleDateString('pt-BR') : undefined,
-        observacoes: item.observacoes || undefined
+        observacoes: item.observacoes
       }));
 
       setComissoes(mappedComissoes);
@@ -77,6 +82,7 @@ export const useComissoes = () => {
         .from('comissoes')
         .insert({
           venda_id: comissao.vendaId,
+          indicador_id: comissao.indicadorId,
           valor: valorNumerico,
           percentual: percentualNumerico,
           status: comissao.status,
@@ -103,6 +109,8 @@ export const useComissoes = () => {
 
     try {
       const updateData: any = {};
+      if (updatedComissao.vendaId) updateData.venda_id = updatedComissao.vendaId;
+      if (updatedComissao.indicadorId) updateData.indicador_id = updatedComissao.indicadorId;
       if (updatedComissao.valor) {
         const valorNumerico = parseFloat(updatedComissao.valor.replace('R$', '').replace(',', '.').trim());
         updateData.valor = valorNumerico;
@@ -157,17 +165,12 @@ export const useComissoes = () => {
     }
   };
 
-  const getComissao = (id: string) => {
-    return comissoes.find(com => com.id === id);
-  };
-
   return {
     comissoes,
     loading,
     createComissao,
     updateComissao,
     deleteComissao,
-    getComissao,
     refresh: fetchComissoes
   };
 };
