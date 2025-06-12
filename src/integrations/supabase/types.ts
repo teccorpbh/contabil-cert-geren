@@ -9,7 +9,208 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      certificados: {
+        Row: {
+          cliente: string
+          created_at: string
+          dias_vencimento: number | null
+          documento: string
+          id: string
+          status: Database["public"]["Enums"]["status_certificado"]
+          tipo: string
+          updated_at: string
+          user_id: string
+          validade: string
+          venda_id: string
+        }
+        Insert: {
+          cliente: string
+          created_at?: string
+          dias_vencimento?: number | null
+          documento: string
+          id?: string
+          status?: Database["public"]["Enums"]["status_certificado"]
+          tipo: string
+          updated_at?: string
+          user_id: string
+          validade: string
+          venda_id: string
+        }
+        Update: {
+          cliente?: string
+          created_at?: string
+          dias_vencimento?: number | null
+          documento?: string
+          id?: string
+          status?: Database["public"]["Enums"]["status_certificado"]
+          tipo?: string
+          updated_at?: string
+          user_id?: string
+          validade?: string
+          venda_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificados_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comissoes: {
+        Row: {
+          created_at: string
+          data_pagamento: string | null
+          id: string
+          indicador_id: string
+          observacoes: string | null
+          percentual: number
+          status: Database["public"]["Enums"]["status_comissao"]
+          updated_at: string
+          user_id: string
+          valor: number
+          venda_id: string
+        }
+        Insert: {
+          created_at?: string
+          data_pagamento?: string | null
+          id?: string
+          indicador_id: string
+          observacoes?: string | null
+          percentual: number
+          status?: Database["public"]["Enums"]["status_comissao"]
+          updated_at?: string
+          user_id: string
+          valor: number
+          venda_id: string
+        }
+        Update: {
+          created_at?: string
+          data_pagamento?: string | null
+          id?: string
+          indicador_id?: string
+          observacoes?: string | null
+          percentual?: number
+          status?: Database["public"]["Enums"]["status_comissao"]
+          updated_at?: string
+          user_id?: string
+          valor?: number
+          venda_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comissoes_indicador_id_fkey"
+            columns: ["indicador_id"]
+            isOneToOne: false
+            referencedRelation: "indicadores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comissoes_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      indicadores: {
+        Row: {
+          created_at: string
+          data_cadastro: string
+          email: string
+          id: string
+          nome: string
+          percentual_comissao: number
+          status: Database["public"]["Enums"]["status_indicador"]
+          telefone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data_cadastro?: string
+          email: string
+          id?: string
+          nome: string
+          percentual_comissao?: number
+          status?: Database["public"]["Enums"]["status_indicador"]
+          telefone: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data_cadastro?: string
+          email?: string
+          id?: string
+          nome?: string
+          percentual_comissao?: number
+          status?: Database["public"]["Enums"]["status_indicador"]
+          telefone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vendas: {
+        Row: {
+          cliente: string
+          created_at: string
+          data: string
+          data_vencimento: string | null
+          id: string
+          indicador_id: string | null
+          pedido_segura: string
+          responsavel: string
+          status: Database["public"]["Enums"]["status_venda"]
+          status_pagamento: Database["public"]["Enums"]["status_pagamento"]
+          updated_at: string
+          user_id: string
+          valor: number
+        }
+        Insert: {
+          cliente: string
+          created_at?: string
+          data?: string
+          data_vencimento?: string | null
+          id?: string
+          indicador_id?: string | null
+          pedido_segura: string
+          responsavel: string
+          status?: Database["public"]["Enums"]["status_venda"]
+          status_pagamento?: Database["public"]["Enums"]["status_pagamento"]
+          updated_at?: string
+          user_id: string
+          valor: number
+        }
+        Update: {
+          cliente?: string
+          created_at?: string
+          data?: string
+          data_vencimento?: string | null
+          id?: string
+          indicador_id?: string | null
+          pedido_segura?: string
+          responsavel?: string
+          status?: Database["public"]["Enums"]["status_venda"]
+          status_pagamento?: Database["public"]["Enums"]["status_pagamento"]
+          updated_at?: string
+          user_id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendas_indicador_id_fkey"
+            columns: ["indicador_id"]
+            isOneToOne: false
+            referencedRelation: "indicadores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +219,11 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      status_certificado: "Emitido" | "Pendente" | "Cancelado"
+      status_comissao: "Paga" | "Pendente"
+      status_indicador: "Ativo" | "Inativo"
+      status_pagamento: "Pendente" | "Pago" | "Vencido"
+      status_venda: "Pendente" | "Emitido" | "Cancelado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +338,12 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      status_certificado: ["Emitido", "Pendente", "Cancelado"],
+      status_comissao: ["Paga", "Pendente"],
+      status_indicador: ["Ativo", "Inativo"],
+      status_pagamento: ["Pendente", "Pago", "Vencido"],
+      status_venda: ["Pendente", "Emitido", "Cancelado"],
+    },
   },
 } as const

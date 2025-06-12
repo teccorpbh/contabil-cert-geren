@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Venda } from '@/hooks/useVendas';
+import { useIndicadores } from '@/hooks/useIndicadores';
 
 interface VendaModalProps {
   isOpen: boolean;
@@ -16,6 +17,8 @@ interface VendaModalProps {
 }
 
 const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) => {
+  const { indicadores } = useIndicadores();
+  
   const [formData, setFormData] = useState({
     pedidoSegura: '',
     cliente: '',
@@ -43,11 +46,29 @@ const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) =
         data: venda.data,
         dataVencimento: venda.dataVencimento || ''
       });
+    } else {
+      setFormData({
+        pedidoSegura: '',
+        cliente: '',
+        valor: '',
+        responsavel: '',
+        indicador: '',
+        indicadorId: '',
+        status: 'Pendente',
+        statusPagamento: 'Pendente',
+        data: new Date().toLocaleDateString('pt-BR'),
+        dataVencimento: ''
+      });
     }
   }, [venda]);
 
   const handleSave = () => {
-    onSave(formData);
+    const selectedIndicador = indicadores.find(ind => ind.id === formData.indicadorId);
+    const saveData = {
+      ...formData,
+      indicador: selectedIndicador?.nome || '-'
+    };
+    onSave(saveData);
     onClose();
   };
 
@@ -89,6 +110,7 @@ const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) =
               value={formData.valor}
               onChange={(e) => setFormData({...formData, valor: e.target.value})}
               disabled={isReadOnly}
+              placeholder="R$ 0,00"
             />
           </div>
 
@@ -108,15 +130,24 @@ const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) =
 
           <div>
             <Label>Indicador</Label>
-            <Select value={formData.indicador} onValueChange={(value) => setFormData({...formData, indicador: value})} disabled={isReadOnly}>
+            <Select 
+              value={formData.indicadorId} 
+              onValueChange={(value) => setFormData({...formData, indicadorId: value})} 
+              disabled={isReadOnly}
+            >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Selecione um indicador" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Maria Santos">Maria Santos</SelectItem>
-                <SelectItem value="Pedro Lima">Pedro Lima</SelectItem>
-                <SelectItem value="Lucas Ferreira">Lucas Ferreira</SelectItem>
-                <SelectItem value="-">Sem indicador</SelectItem>
+                <SelectItem value="">Sem indicador</SelectItem>
+                {indicadores
+                  .filter(ind => ind.status === 'Ativo')
+                  .map((indicador) => (
+                    <SelectItem key={indicador.id} value={indicador.id}>
+                      {indicador.nome}
+                    </SelectItem>
+                  ))
+                }
               </SelectContent>
             </Select>
           </div>

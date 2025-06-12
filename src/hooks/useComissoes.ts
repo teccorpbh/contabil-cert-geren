@@ -1,5 +1,8 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 export interface Comissao {
   id: string;
@@ -13,51 +16,145 @@ export interface Comissao {
 }
 
 export const useComissoes = () => {
-  const [comissoes, setComissoes] = useState<Comissao[]>([
-    {
-      id: "COM001",
-      vendaId: "V001",
-      indicador: "Maria Santos",
-      valor: "R$ 45,00",
-      percentual: "10%",
-      status: "Pendente",
-      observacoes: "Aguardando confirmação do pagamento"
-    },
-    {
-      id: "COM002",
-      vendaId: "V002",
-      indicador: "Pedro Lima",
-      valor: "R$ 32,00",
-      percentual: "10%",
-      status: "Paga",
-      dataPagamento: "20/01/2024"
-    },
-    {
-      id: "COM003",
-      vendaId: "V003",
-      indicador: "Lucas Ferreira",
-      valor: "R$ 28,00",
-      percentual: "10%",
-      status: "Pendente"
+  const [comissoes, setComissoes] = useState<Comissao[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const fetchComissoes = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('comissoes')
+        .select(`
+          *,
+          indicadores (
+            nome
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const mappedComissoes: Comissao[] = data.map(item => ({
+        id: item.id,
+        vendaId: item.venda_id,
+        indicador: item.indicadores?.nome || 'Indicador não encontrado',
+        valor: `R$ ${Number(item.valor).toFixed(2).replace('.', ',')}`,
+        percentual: `${item.percentual}%`,
+        status: item.status,
+        dataPagamento: item.data_pagamento ? new Date(item.data_pagamento).toLocaleDateString('pt-BR') : undefined,
+        observacoes: item.observacoes || undefined
+      }));
+
+      setComissoes(mappedComissoes);
+    } catch (error: any) {
+      console.error('Erro ao buscar comissões:', error);
+      toast({
+        title: "Erro ao carregar comissões",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
-  ]);
-
-  const createComissao = (comissao: Omit<Comissao, 'id'>) => {
-    const newComissao: Comissao = {
-      ...comissao,
-      id: `COM${String(comissoes.length + 1).padStart(3, '0')}`
-    };
-    setComissoes([newComissao, ...comissoes]);
   };
 
-  const updateComissao = (id: string, updatedComissao: Partial<Comissao>) => {
-    setComissoes(comissoes.map(com => 
-      com.id === id ? { ...com, ...updatedComissao } : com
-    ));
+  useEffect(() => {
+    fetchComissoes();
+  }, [user]);
+
+  const createComissao = async (comissao: Omit<Comissao, 'id'>) => {
+    if (!user) return;
+
+    try {
+      const valorNumerico = parseFloat(comissao.valor.replace('R$', '').replace(',', '.').trim());
+      const percentualNumerico = parseInt(comissao.percentual.replace('%', ''));
+      
+      const { error } = await supabase
+        .from('comissoes')
+        .insert({
+          venda_id: comissao.vendaId,
+          valor: valorNumerico,
+          percentual: percentualNumerico,
+          status: comissao.status,
+          data_pagamento: comissao.dataPagamento ? new Date(comissao.dataPagamento).toISOString() : null,
+          observacoes: comissao.observacoes,
+          user_id: user.id
+        });
+
+      if (error) throw error;
+      
+      await fetchComissoes();
+    } catch (error: any) {
+      console.error('Erro ao criar comissão:', error);
+      toast({
+        title: "Erro ao criar comissão",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
-  const deleteComissao = (id: string) => {
-    setComissoes(comissoes.filter(com => com.id !== id));
+  const updateComissao = async (id: string, updatedComissao: Partial<Comissao>) => {
+    if (!user) return;
+
+    try {
+      const updateData: any = {};
+      if (updatedComissao.valor) {
+        const valorNumerico = parseFloat(updatedComissao.valor.replace('R$', '').replace(',', '.').trim());
+        updateData.valor = valorNumerico;
+      }
+      if (updatedComissao.percentual) {
+        const percentualNumerico = parseInt(updatedComissao.percentual.replace('%', ''));
+        updateData.percentual = percentualNumerico;
+      }
+      if (updatedComissao.status) updateData.status = updatedComissao.status;
+      if (updatedComissao.dataPagamento !== undefined) {
+        updateData.data_pagamento = updatedComissao.dataPagamento ? new Date(updatedComissao.dataPagamento).toISOString() : null;
+      }
+      if (updatedComissao.observacoes !== undefined) updateData.observacoes = updatedComissao.observacoes;
+
+      const { error } = await supabase
+        .from('comissoes')
+        .update(updateData)
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      await fetchComissoes();
+    } catch (error: any) {
+      console.error('Erro ao atualizar comissão:', error);
+      toast({
+        title: "Erro ao atualizar comissão",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const deleteComissao = async (id: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('comissoes')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      await fetchComissoes();
+    } catch (error: any) {
+      console.error('Erro ao deletar comissão:', error);
+      toast({
+        title: "Erro ao deletar comissão",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
   const getComissao = (id: string) => {
@@ -66,9 +163,11 @@ export const useComissoes = () => {
 
   return {
     comissoes,
+    loading,
     createComissao,
     updateComissao,
     deleteComissao,
-    getComissao
+    getComissao,
+    refresh: fetchComissoes
   };
 };

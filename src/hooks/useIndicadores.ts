@@ -1,5 +1,8 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 export interface Indicador {
   id: string;
@@ -12,52 +15,127 @@ export interface Indicador {
 }
 
 export const useIndicadores = () => {
-  const [indicadores, setIndicadores] = useState<Indicador[]>([
-    {
-      id: "IND001",
-      nome: "Maria Santos",
-      email: "maria.santos@email.com",
-      telefone: "(11) 99999-1111",
-      percentualComissao: 10,
-      status: "Ativo",
-      dataCadastro: "10/01/2024"
-    },
-    {
-      id: "IND002",
-      nome: "Pedro Lima",
-      email: "pedro.lima@email.com",
-      telefone: "(11) 99999-2222",
-      percentualComissao: 8,
-      status: "Ativo",
-      dataCadastro: "08/01/2024"
-    },
-    {
-      id: "IND003",
-      nome: "Lucas Ferreira",
-      email: "lucas.ferreira@email.com",
-      telefone: "(11) 99999-3333",
-      percentualComissao: 12,
-      status: "Inativo",
-      dataCadastro: "05/01/2024"
+  const [indicadores, setIndicadores] = useState<Indicador[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const fetchIndicadores = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('indicadores')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const mappedIndicadores: Indicador[] = data.map(item => ({
+        id: item.id,
+        nome: item.nome,
+        email: item.email,
+        telefone: item.telefone,
+        percentualComissao: item.percentual_comissao,
+        status: item.status as 'Ativo' | 'Inativo',
+        dataCadastro: new Date(item.data_cadastro).toLocaleDateString('pt-BR')
+      }));
+
+      setIndicadores(mappedIndicadores);
+    } catch (error: any) {
+      console.error('Erro ao buscar indicadores:', error);
+      toast({
+        title: "Erro ao carregar indicadores",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
-  ]);
-
-  const createIndicador = (indicador: Omit<Indicador, 'id'>) => {
-    const newIndicador: Indicador = {
-      ...indicador,
-      id: `IND${String(indicadores.length + 1).padStart(3, '0')}`
-    };
-    setIndicadores([newIndicador, ...indicadores]);
   };
 
-  const updateIndicador = (id: string, updatedIndicador: Partial<Indicador>) => {
-    setIndicadores(indicadores.map(ind => 
-      ind.id === id ? { ...ind, ...updatedIndicador } : ind
-    ));
+  useEffect(() => {
+    fetchIndicadores();
+  }, [user]);
+
+  const createIndicador = async (indicador: Omit<Indicador, 'id'>) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('indicadores')
+        .insert({
+          nome: indicador.nome,
+          email: indicador.email,
+          telefone: indicador.telefone,
+          percentual_comissao: indicador.percentualComissao,
+          status: indicador.status,
+          user_id: user.id
+        });
+
+      if (error) throw error;
+      
+      await fetchIndicadores();
+    } catch (error: any) {
+      console.error('Erro ao criar indicador:', error);
+      toast({
+        title: "Erro ao criar indicador",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
-  const deleteIndicador = (id: string) => {
-    setIndicadores(indicadores.filter(ind => ind.id !== id));
+  const updateIndicador = async (id: string, updatedIndicador: Partial<Indicador>) => {
+    if (!user) return;
+
+    try {
+      const updateData: any = {};
+      if (updatedIndicador.nome) updateData.nome = updatedIndicador.nome;
+      if (updatedIndicador.email) updateData.email = updatedIndicador.email;
+      if (updatedIndicador.telefone) updateData.telefone = updatedIndicador.telefone;
+      if (updatedIndicador.percentualComissao !== undefined) updateData.percentual_comissao = updatedIndicador.percentualComissao;
+      if (updatedIndicador.status) updateData.status = updatedIndicador.status;
+
+      const { error } = await supabase
+        .from('indicadores')
+        .update(updateData)
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      await fetchIndicadores();
+    } catch (error: any) {
+      console.error('Erro ao atualizar indicador:', error);
+      toast({
+        title: "Erro ao atualizar indicador",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const deleteIndicador = async (id: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('indicadores')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      await fetchIndicadores();
+    } catch (error: any) {
+      console.error('Erro ao deletar indicador:', error);
+      toast({
+        title: "Erro ao deletar indicador",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
   const getIndicador = (id: string) => {
@@ -70,10 +148,12 @@ export const useIndicadores = () => {
 
   return {
     indicadores,
+    loading,
     createIndicador,
     updateIndicador,
     deleteIndicador,
     getIndicador,
-    getIndicadorByNome
+    getIndicadorByNome,
+    refresh: fetchIndicadores
   };
 };

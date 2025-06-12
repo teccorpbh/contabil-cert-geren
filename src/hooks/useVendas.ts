@@ -1,5 +1,8 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 export interface Venda {
   id: string;
@@ -16,63 +19,149 @@ export interface Venda {
 }
 
 export const useVendas = () => {
-  const [vendas, setVendas] = useState<Venda[]>([
-    {
-      id: "V001",
-      pedidoSegura: "SG123456",
-      cliente: "Empresa ABC Ltda",
-      valor: "R$ 450,00",
-      responsavel: "João Silva",
-      indicador: "Maria Santos",
-      indicadorId: "IND001",
-      status: "Pendente",
-      statusPagamento: "Pendente",
-      data: "15/01/2024",
-      dataVencimento: "30/01/2024"
-    },
-    {
-      id: "V002",
-      pedidoSegura: "SG123457",
-      cliente: "Tech Solutions ME",
-      valor: "R$ 320,00",
-      responsavel: "Ana Costa",
-      indicador: "Pedro Lima",
-      indicadorId: "IND002",
-      status: "Emitido",
-      statusPagamento: "Pago",
-      data: "14/01/2024",
-      dataVencimento: "29/01/2024"
-    },
-    {
-      id: "V003",
-      pedidoSegura: "SG123458",
-      cliente: "Consultoria XYZ",
-      valor: "R$ 280,00",
-      responsavel: "Carlos Oliveira",
-      indicador: "-",
-      status: "Cancelado",
-      statusPagamento: "Vencido",
-      data: "13/01/2024",
-      dataVencimento: "28/01/2024"
+  const [vendas, setVendas] = useState<Venda[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const fetchVendas = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('vendas')
+        .select(`
+          *,
+          indicadores (
+            nome
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const mappedVendas: Venda[] = data.map(item => ({
+        id: item.id,
+        pedidoSegura: item.pedido_segura,
+        cliente: item.cliente,
+        valor: `R$ ${Number(item.valor).toFixed(2).replace('.', ',')}`,
+        responsavel: item.responsavel,
+        indicador: item.indicadores?.nome || '-',
+        indicadorId: item.indicador_id,
+        status: item.status,
+        statusPagamento: item.status_pagamento,
+        data: new Date(item.data).toLocaleDateString('pt-BR'),
+        dataVencimento: item.data_vencimento ? new Date(item.data_vencimento).toLocaleDateString('pt-BR') : undefined
+      }));
+
+      setVendas(mappedVendas);
+    } catch (error: any) {
+      console.error('Erro ao buscar vendas:', error);
+      toast({
+        title: "Erro ao carregar vendas",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
-  ]);
-
-  const createVenda = (venda: Omit<Venda, 'id'>) => {
-    const newVenda: Venda = {
-      ...venda,
-      id: `V${String(vendas.length + 1).padStart(3, '0')}`
-    };
-    setVendas([newVenda, ...vendas]);
   };
 
-  const updateVenda = (id: string, updatedVenda: Partial<Venda>) => {
-    setVendas(vendas.map(venda => 
-      venda.id === id ? { ...venda, ...updatedVenda } : venda
-    ));
+  useEffect(() => {
+    fetchVendas();
+  }, [user]);
+
+  const createVenda = async (venda: Omit<Venda, 'id'>) => {
+    if (!user) return;
+
+    try {
+      const valorNumerico = parseFloat(venda.valor.replace('R$', '').replace(',', '.').trim());
+      
+      const { error } = await supabase
+        .from('vendas')
+        .insert({
+          pedido_segura: venda.pedidoSegura,
+          cliente: venda.cliente,
+          valor: valorNumerico,
+          responsavel: venda.responsavel,
+          indicador_id: venda.indicadorId || null,
+          status: venda.status,
+          status_pagamento: venda.statusPagamento,
+          data_vencimento: venda.dataVencimento ? new Date(venda.dataVencimento).toISOString() : null,
+          user_id: user.id
+        });
+
+      if (error) throw error;
+      
+      await fetchVendas();
+    } catch (error: any) {
+      console.error('Erro ao criar venda:', error);
+      toast({
+        title: "Erro ao criar venda",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
-  const deleteVenda = (id: string) => {
-    setVendas(vendas.filter(venda => venda.id !== id));
+  const updateVenda = async (id: string, updatedVenda: Partial<Venda>) => {
+    if (!user) return;
+
+    try {
+      const updateData: any = {};
+      if (updatedVenda.pedidoSegura) updateData.pedido_segura = updatedVenda.pedidoSegura;
+      if (updatedVenda.cliente) updateData.cliente = updatedVenda.cliente;
+      if (updatedVenda.valor) {
+        const valorNumerico = parseFloat(updatedVenda.valor.replace('R$', '').replace(',', '.').trim());
+        updateData.valor = valorNumerico;
+      }
+      if (updatedVenda.responsavel) updateData.responsavel = updatedVenda.responsavel;
+      if (updatedVenda.indicadorId !== undefined) updateData.indicador_id = updatedVenda.indicadorId || null;
+      if (updatedVenda.status) updateData.status = updatedVenda.status;
+      if (updatedVenda.statusPagamento) updateData.status_pagamento = updatedVenda.statusPagamento;
+      if (updatedVenda.dataVencimento !== undefined) {
+        updateData.data_vencimento = updatedVenda.dataVencimento ? new Date(updatedVenda.dataVencimento).toISOString() : null;
+      }
+
+      const { error } = await supabase
+        .from('vendas')
+        .update(updateData)
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      await fetchVendas();
+    } catch (error: any) {
+      console.error('Erro ao atualizar venda:', error);
+      toast({
+        title: "Erro ao atualizar venda",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const deleteVenda = async (id: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('vendas')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      await fetchVendas();
+    } catch (error: any) {
+      console.error('Erro ao deletar venda:', error);
+      toast({
+        title: "Erro ao deletar venda",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
   const getVenda = (id: string) => {
@@ -81,9 +170,11 @@ export const useVendas = () => {
 
   return {
     vendas,
+    loading,
     createVenda,
     updateVenda,
     deleteVenda,
-    getVenda
+    getVenda,
+    refresh: fetchVendas
   };
 };
