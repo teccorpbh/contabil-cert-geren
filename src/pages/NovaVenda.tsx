@@ -72,7 +72,7 @@ const NovaVenda = () => {
     setLoading(true);
     try {
       // URL do webhook n8n - deve ser configurada conforme o ambiente
-      const webhookUrl = process.env.VITE_N8N_WEBHOOK_URL || "https://your-n8n-webhook-url.com/webhook/consultar-pedido";
+      const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL || "https://your-n8n-webhook-url.com/webhook/consultar-pedido";
       
       const response = await fetch(webhookUrl, {
         method: 'POST',
