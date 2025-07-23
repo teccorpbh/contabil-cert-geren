@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import Layout from "@/components/Layout";
-import Navigation from "@/components/Navigation";
+import AppNavigation from "@/components/AppNavigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -103,18 +103,7 @@ const Vendas = () => {
 
   return (
     <Layout>
-      <Navigation 
-        brand={{ name: "Contabilcert", icon: FileText }}
-        items={[
-          { label: "Dashboard", href: "/" },
-          { label: "Vendas", href: "/vendas" },
-          { label: "Certificados", href: "/certificados" },
-          { label: "Indicadores", href: "/indicadores" },
-          { label: "Comissões", href: "/comissoes" },
-          { label: "Relatórios", href: "/relatorios" }
-        ]}
-        actions={[{ label: "Nova Venda", onClick: handleCreate }]}
-      />
+      <AppNavigation />
 
       <div className="container mx-auto px-6 py-8">
         <div className="flex justify-between items-center mb-8">

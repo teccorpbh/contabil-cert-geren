@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import Layout from "@/components/Layout";
-import Navigation from "@/components/Navigation";
+import AppNavigation from "@/components/AppNavigation";
 import Hero from "@/components/Hero";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,24 +51,7 @@ const Index = () => {
 
   return (
     <Layout>
-      <Navigation 
-        brand={{ name: "Contabilcert", icon: FileText }}
-        items={[
-          { label: "Dashboard", href: "/" },
-          { label: "Vendas", href: "/vendas" },
-          { label: "Certificados", href: "/certificados" },
-          { label: "Indicadores", href: "/indicadores" },
-          { label: "Comissões", href: "/comissoes" },
-          { label: "Relatórios", href: "/relatorios" }
-        ]}
-        actions={[
-          { label: "Nova Venda", href: "/vendas/nova" },
-          { 
-            label: "Sair", 
-            onClick: handleSignOut
-          }
-        ]}
-      />
+      <AppNavigation />
 
       <div className="container mx-auto px-6 py-8">
         {/* Welcome Section */}
