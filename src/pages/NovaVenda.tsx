@@ -71,8 +71,8 @@ const NovaVenda = () => {
 
     setLoading(true);
     try {
-      // URL do webhook n8n - deve ser configurada conforme o ambiente
-      const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL || "https://your-n8n-webhook-url.com/webhook/consultar-pedido";
+      // URL do webhook n8n
+      const webhookUrl = "https://n8n.rockethub.com.br/webhook/ea04a06d-d591-426f-b8d8-0cd103ef0fb1";
       
       const response = await fetch(webhookUrl, {
         method: 'POST',
