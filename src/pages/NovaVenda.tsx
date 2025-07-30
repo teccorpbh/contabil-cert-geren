@@ -322,7 +322,7 @@ const NovaVenda = () => {
                     <div className="mt-6">
                       <Label className="text-sm font-medium">Histórico de Pagamento</Label>
                       <div className="mt-2 space-y-2">
-                        {pedidoData.data.pagamento.historico.map((hist, index) => (
+                        {pedidoData.data?.pagamento?.historico?.map((hist, index) => (
                           <div key={index} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
                             <div>
                               <span className="text-sm font-medium">{hist.status}</span>
