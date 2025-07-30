@@ -102,11 +102,11 @@ const NovaVenda = () => {
       setPedidoData(data);
       
       // Preencher automaticamente alguns campos
-      if (data.data.cliente.nome || data.data.cliente.razao_social) {
+      if (data.data?.cliente?.nome || data.data?.cliente?.razao_social) {
         // Aqui você pode preencher outros campos automaticamente se necessário
       }
       
-      if (data.data.pagamento.valor) {
+      if (data.data?.pagamento?.valor) {
         setValorVenda(`R$ ${data.data.pagamento.valor.toFixed(2).replace('.', ',')}`);
       }
 
@@ -226,35 +226,35 @@ const NovaVenda = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Tipo de Certificado</Label>
-                    <Input 
-                      value={pedidoData?.data.produto.tipo || ""} 
-                      placeholder="A1 - Pessoa Física" 
-                      disabled 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>CPF/CNPJ</Label>
-                    <Input 
-                      value={pedidoData?.data.cliente.cpf || pedidoData?.data.cliente.cnpj || ""} 
-                      placeholder="000.000.000-00" 
-                      disabled 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Validade</Label>
-                    <Input 
-                      value={pedidoData?.data.produto.validade || ""} 
-                      placeholder="1 ano" 
-                      disabled 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Status</Label>
-                    <Input 
-                      value={pedidoData?.data.status_pedido || ""} 
-                      placeholder="Pendente" 
-                      disabled 
-                    />
+                     <Input 
+                       value={pedidoData?.data?.produto?.tipo || ""} 
+                       placeholder="A1 - Pessoa Física" 
+                       disabled 
+                     />
+                   </div>
+                   <div className="space-y-2">
+                     <Label>CPF/CNPJ</Label>
+                     <Input 
+                       value={pedidoData?.data?.cliente?.cpf || pedidoData?.data?.cliente?.cnpj || ""} 
+                       placeholder="000.000.000-00" 
+                       disabled 
+                     />
+                   </div>
+                   <div className="space-y-2">
+                     <Label>Validade</Label>
+                     <Input 
+                       value={pedidoData?.data?.produto?.validade || ""} 
+                       placeholder="1 ano" 
+                       disabled 
+                     />
+                   </div>
+                   <div className="space-y-2">
+                     <Label>Status</Label>
+                     <Input 
+                       value={pedidoData?.data?.status_pedido || ""} 
+                       placeholder="Pendente" 
+                       disabled 
+                     />
                   </div>
                 </div>
               </div>
@@ -268,36 +268,36 @@ const NovaVenda = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Cliente</Label>
-                      <Input 
-                        value={pedidoData.data.cliente.nome || pedidoData.data.cliente.razao_social || ""} 
-                        disabled 
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Status do Pagamento</Label>
-                      <Input 
-                        value={pedidoData.data.pagamento.status || ""} 
-                        disabled 
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Produto</Label>
-                      <Input 
-                        value={pedidoData.data.produto.nome || ""} 
-                        disabled 
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Número do Pedido</Label>
-                      <Input 
-                        value={pedidoData.data.numero_pedido || ""} 
-                        disabled 
-                      />
+                       <Input 
+                         value={pedidoData.data?.cliente?.nome || pedidoData.data?.cliente?.razao_social || ""} 
+                         disabled 
+                       />
+                     </div>
+                     <div className="space-y-2">
+                       <Label>Status do Pagamento</Label>
+                       <Input 
+                         value={pedidoData.data?.pagamento?.status || ""} 
+                         disabled 
+                       />
+                     </div>
+                     <div className="space-y-2">
+                       <Label>Produto</Label>
+                       <Input 
+                         value={pedidoData.data?.produto?.nome || ""} 
+                         disabled 
+                       />
+                     </div>
+                     <div className="space-y-2">
+                       <Label>Número do Pedido</Label>
+                       <Input 
+                         value={pedidoData.data?.numero_pedido || ""} 
+                         disabled 
+                       />
                     </div>
                   </div>
 
-                  {/* Documentos */}
-                  {pedidoData.data.documentos && pedidoData.data.documentos.length > 0 && (
+                   {/* Documentos */}
+                   {pedidoData.data?.documentos && pedidoData.data.documentos.length > 0 && (
                     <div className="mt-6">
                       <Label className="text-sm font-medium">Documentos Enviados</Label>
                       <div className="mt-2 space-y-2">
@@ -317,8 +317,8 @@ const NovaVenda = () => {
                     </div>
                   )}
 
-                  {/* Histórico de Pagamento */}
-                  {pedidoData.data.pagamento.historico && pedidoData.data.pagamento.historico.length > 0 && (
+                   {/* Histórico de Pagamento */}
+                   {pedidoData.data?.pagamento?.historico && pedidoData.data.pagamento.historico.length > 0 && (
                     <div className="mt-6">
                       <Label className="text-sm font-medium">Histórico de Pagamento</Label>
                       <div className="mt-2 space-y-2">
@@ -339,12 +339,12 @@ const NovaVenda = () => {
                     </div>
                   )}
 
-                  {/* Observações */}
-                  {pedidoData.data.observacoes && (
+                   {/* Observações */}
+                   {pedidoData.data?.observacoes && (
                     <div className="mt-6">
                       <Label className="text-sm font-medium">Observações</Label>
                       <div className="mt-2 p-3 bg-slate-50 rounded-lg">
-                        <p className="text-sm text-slate-700">{pedidoData.data.observacoes}</p>
+                        <p className="text-sm text-slate-700">{pedidoData.data?.observacoes}</p>
                       </div>
                     </div>
                   )}
