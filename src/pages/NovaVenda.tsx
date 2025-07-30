@@ -11,42 +11,65 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 interface PedidoData {
-  success: boolean;
+  success: string;
   timestamp: string;
   debug: {
-    ultimo_status_pagamento?: string;
-    documentos_ok?: boolean;
+    orderNumber?: string;
+    lastPaymentStatus?: string;
+    lastPaymentDate?: string;
+    documentsOk?: string;
     [key: string]: any;
   };
   data: {
-    numero_pedido: string;
-    status_pedido: string;
-    cliente: {
-      nome?: string;
-      razao_social?: string;
-      cpf?: string;
+    orderDetails: {
+      orderNumber: string;
+      status: string;
+      clientId: string;
+      saleId: string;
+      detectedClientCategory: string;
+    };
+    clientProfile: {
+      type: string;
       cnpj?: string;
+      cpf?: string;
+      socialReason?: string;
+      tradeName?: string;
+      municipalRegistration?: string;
+      stateRegistration?: string;
+      phoneOne?: string;
+      phoneTwo?: string;
+      email?: string;
+      cep?: string;
+      address?: string;
+      number?: string;
+      complement?: string;
+      neighborhood?: string;
+      city?: string;
+      state?: string;
     };
-    produto: {
-      nome: string;
-      tipo: string;
-      validade: string;
+    productData: {
+      productNameSelected: string;
+      productFullNameDisplay: string;
+      validity: string;
+      clientFinalPrice?: string;
+      value: string;
+      hasAdditionalValue?: string;
+      additionalValue?: string;
+      hasInvoice?: string;
     };
-    pagamento: {
+    files: Array<{
+      documentType: string;
       status: string;
-      valor: number;
-      historico: Array<{
-        data: string;
-        status: string;
-        valor?: number;
-      }>;
-    };
-    documentos: Array<{
-      nome: string;
-      status: string;
-      data_envio?: string;
     }>;
-    observacoes?: string;
+    supportObservations?: string;
+    paymentHistory: Array<{
+      reference?: string;
+      action: string;
+      transactionId?: string;
+      errorId?: string;
+      message: string;
+      date: string;
+    }>;
   };
 }
 
@@ -102,12 +125,14 @@ const NovaVenda = () => {
       setPedidoData(data);
       
       // Preencher automaticamente alguns campos
-      if (data.data?.cliente?.nome || data.data?.cliente?.razao_social) {
+      if (data.data?.clientProfile?.socialReason || data.data?.clientProfile?.tradeName) {
         // Aqui você pode preencher outros campos automaticamente se necessário
       }
       
-      if (data.data?.pagamento?.valor) {
-        setValorVenda(`R$ ${data.data.pagamento.valor.toFixed(2).replace('.', ',')}`);
+      if (data.data?.productData?.value) {
+        // Remove "R$ " do início da string para extrair apenas o valor numérico
+        const valor = data.data.productData.value.replace('R$ ', '').replace(',', '.');
+        setValorVenda(data.data.productData.value);
       }
 
       toast({
@@ -223,11 +248,11 @@ const NovaVenda = () => {
                 <h3 className="text-lg font-semibold text-slate-900 mb-4">
                   Dados do Certificado {pedidoData ? "(Carregados automaticamente)" : "(Preenchido automaticamente)"}
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Tipo de Certificado</Label>
+                 <div className="grid grid-cols-2 gap-4">
+                   <div className="space-y-2">
+                     <Label>Tipo de Certificado</Label>
                      <Input 
-                       value={pedidoData?.data?.produto?.tipo || ""} 
+                       value={pedidoData?.data?.productData?.productNameSelected || ""} 
                        placeholder="A1 - Pessoa Física" 
                        disabled 
                      />
@@ -235,7 +260,7 @@ const NovaVenda = () => {
                    <div className="space-y-2">
                      <Label>CPF/CNPJ</Label>
                      <Input 
-                       value={pedidoData?.data?.cliente?.cpf || pedidoData?.data?.cliente?.cnpj || ""} 
+                       value={pedidoData?.data?.clientProfile?.cpf || pedidoData?.data?.clientProfile?.cnpj || ""} 
                        placeholder="000.000.000-00" 
                        disabled 
                      />
@@ -243,7 +268,7 @@ const NovaVenda = () => {
                    <div className="space-y-2">
                      <Label>Validade</Label>
                      <Input 
-                       value={pedidoData?.data?.produto?.validade || ""} 
+                       value={pedidoData?.data?.productData?.validity || ""} 
                        placeholder="1 ano" 
                        disabled 
                      />
@@ -251,105 +276,180 @@ const NovaVenda = () => {
                    <div className="space-y-2">
                      <Label>Status</Label>
                      <Input 
-                       value={pedidoData?.data?.status_pedido || ""} 
+                       value={pedidoData?.data?.orderDetails?.status || ""} 
                        placeholder="Pendente" 
                        disabled 
                      />
-                  </div>
-                </div>
-              </div>
+                   </div>
+                 </div>
+               </div>
 
-              {/* Informações do Cliente (quando dados são carregados) */}
-              {pedidoData && (
-                <div className="border-t pt-6">
-                  <h3 className="text-lg font-semibold text-slate-900 mb-4">
-                    Informações do Cliente
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Cliente</Label>
+               {/* Informações do Cliente (quando dados são carregados) */}
+               {pedidoData && (
+                 <div className="border-t pt-6">
+                   <h3 className="text-lg font-semibold text-slate-900 mb-4">
+                     Informações do Cliente
+                   </h3>
+                   <div className="grid grid-cols-2 gap-4">
+                     <div className="space-y-2">
+                       <Label>Cliente</Label>
                        <Input 
-                         value={pedidoData.data?.cliente?.nome || pedidoData.data?.cliente?.razao_social || ""} 
+                         value={pedidoData.data?.clientProfile?.socialReason || pedidoData.data?.clientProfile?.tradeName || ""} 
                          disabled 
                        />
                      </div>
                      <div className="space-y-2">
                        <Label>Status do Pagamento</Label>
                        <Input 
-                         value={pedidoData.data?.pagamento?.status || ""} 
+                         value={pedidoData.debug?.lastPaymentStatus || ""} 
                          disabled 
                        />
                      </div>
                      <div className="space-y-2">
                        <Label>Produto</Label>
                        <Input 
-                         value={pedidoData.data?.produto?.nome || ""} 
+                         value={pedidoData.data?.productData?.productFullNameDisplay || ""} 
                          disabled 
                        />
                      </div>
                      <div className="space-y-2">
                        <Label>Número do Pedido</Label>
                        <Input 
-                         value={pedidoData.data?.numero_pedido || ""} 
+                         value={pedidoData.data?.orderDetails?.orderNumber || ""} 
                          disabled 
                        />
-                    </div>
-                  </div>
+                     </div>
+                     <div className="space-y-2">
+                       <Label>Email</Label>
+                       <Input 
+                         value={pedidoData.data?.clientProfile?.email || ""} 
+                         disabled 
+                       />
+                     </div>
+                     <div className="space-y-2">
+                       <Label>Telefone</Label>
+                       <Input 
+                         value={pedidoData.data?.clientProfile?.phoneOne || ""} 
+                         disabled 
+                       />
+                     </div>
+                     <div className="space-y-2">
+                       <Label>Endereço</Label>
+                       <Input 
+                         value={`${pedidoData.data?.clientProfile?.address || ""} ${pedidoData.data?.clientProfile?.number || ""}`} 
+                         disabled 
+                       />
+                     </div>
+                     <div className="space-y-2">
+                       <Label>Cidade/Estado</Label>
+                       <Input 
+                         value={`${pedidoData.data?.clientProfile?.city || ""} - ${pedidoData.data?.clientProfile?.state || ""}`} 
+                         disabled 
+                       />
+                     </div>
+                     <div className="space-y-2">
+                       <Label>CEP</Label>
+                       <Input 
+                         value={pedidoData.data?.clientProfile?.cep || ""} 
+                         disabled 
+                       />
+                     </div>
+                     <div className="space-y-2">
+                       <Label>Categoria do Cliente</Label>
+                       <Input 
+                         value={pedidoData.data?.orderDetails?.detectedClientCategory || ""} 
+                         disabled 
+                       />
+                     </div>
+                   </div>
 
                    {/* Documentos */}
-                   {pedidoData.data?.documentos && pedidoData.data.documentos.length > 0 && (
-                    <div className="mt-6">
-                      <Label className="text-sm font-medium">Documentos Enviados</Label>
-                      <div className="mt-2 space-y-2">
-                        {pedidoData.data.documentos.map((doc, index) => (
-                          <div key={index} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                            <span className="text-sm">{doc.nome}</span>
-                            <span className={`text-xs px-2 py-1 rounded-full ${
-                              doc.status === 'aprovado' ? 'bg-green-100 text-green-800' :
-                              doc.status === 'rejeitado' ? 'bg-red-100 text-red-800' :
-                              'bg-yellow-100 text-yellow-800'
-                            }`}>
-                              {doc.status}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                   {pedidoData.data?.files && pedidoData.data.files.length > 0 && (
+                     <div className="mt-6">
+                       <Label className="text-sm font-medium">Documentos Enviados</Label>
+                       <div className="mt-2 space-y-2">
+                         {pedidoData.data.files.map((doc, index) => (
+                           <div key={index} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                             <span className="text-sm">{doc.documentType}</span>
+                             <span className={`text-xs px-2 py-1 rounded-full ${
+                               doc.status.toLowerCase() === 'aprovado' ? 'bg-green-100 text-green-800' :
+                               doc.status.toLowerCase() === 'rejeitado' ? 'bg-red-100 text-red-800' :
+                               'bg-yellow-100 text-yellow-800'
+                             }`}>
+                               {doc.status}
+                             </span>
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                   )}
 
                    {/* Histórico de Pagamento */}
-                   {pedidoData.data?.pagamento?.historico && pedidoData.data.pagamento.historico.length > 0 && (
-                    <div className="mt-6">
-                      <Label className="text-sm font-medium">Histórico de Pagamento</Label>
-                      <div className="mt-2 space-y-2">
-                        {pedidoData.data?.pagamento?.historico?.map((hist, index) => (
-                          <div key={index} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                            <div>
-                              <span className="text-sm font-medium">{hist.status}</span>
-                              <span className="text-xs text-slate-500 ml-2">{hist.data}</span>
-                            </div>
-                            {hist.valor && (
-                              <span className="text-sm font-medium">
-                                R$ {hist.valor.toFixed(2).replace('.', ',')}
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                   {pedidoData.data?.paymentHistory && pedidoData.data.paymentHistory.length > 0 && (
+                     <div className="mt-6">
+                       <Label className="text-sm font-medium">Histórico de Pagamento</Label>
+                       <div className="mt-2 space-y-2">
+                         {pedidoData.data.paymentHistory.map((hist, index) => (
+                           <div key={index} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                             <div>
+                               <span className="text-sm font-medium">{hist.action}</span>
+                               <span className="text-xs text-slate-500 ml-2">{hist.date}</span>
+                               {hist.message && (
+                                 <div className="text-xs text-slate-600 mt-1">{hist.message}</div>
+                               )}
+                             </div>
+                             {hist.transactionId && (
+                               <span className="text-xs text-slate-500">
+                                 ID: {hist.transactionId}
+                               </span>
+                             )}
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                   )}
 
                    {/* Observações */}
-                   {pedidoData.data?.observacoes && (
-                    <div className="mt-6">
-                      <Label className="text-sm font-medium">Observações</Label>
-                      <div className="mt-2 p-3 bg-slate-50 rounded-lg">
-                        <p className="text-sm text-slate-700">{pedidoData.data?.observacoes}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
+                   {pedidoData.data?.supportObservations && (
+                     <div className="mt-6">
+                       <Label className="text-sm font-medium">Observações de Suporte</Label>
+                       <div className="mt-2 p-3 bg-slate-50 rounded-lg">
+                         <p className="text-sm text-slate-700">{pedidoData.data.supportObservations}</p>
+                       </div>
+                     </div>
+                   )}
+
+                   {/* Informações Adicionais do Produto */}
+                   {pedidoData.data?.productData && (
+                     <div className="mt-6">
+                       <Label className="text-sm font-medium">Detalhes do Produto</Label>
+                       <div className="mt-2 grid grid-cols-2 gap-4">
+                         <div className="space-y-2">
+                           <Label className="text-xs text-slate-500">Valor do Cliente</Label>
+                           <Input 
+                             value={pedidoData.data.productData.value || ""} 
+                             disabled 
+                           />
+                         </div>
+                         <div className="space-y-2">
+                           <Label className="text-xs text-slate-500">Valor Adicional</Label>
+                           <Input 
+                             value={pedidoData.data.productData.hasAdditionalValue === "Sim" ? `R$ ${pedidoData.data.productData.additionalValue}` : "Não"} 
+                             disabled 
+                           />
+                         </div>
+                         <div className="space-y-2">
+                           <Label className="text-xs text-slate-500">Possui Nota Fiscal</Label>
+                           <Input 
+                             value={pedidoData.data.productData.hasInvoice || "Não"} 
+                             disabled 
+                           />
+                         </div>
+                       </div>
+                     </div>
+                   )}
+                 </div>
+               )}
 
               {/* Botões */}
               <div className="flex gap-4 pt-6">
