@@ -64,6 +64,72 @@ export type Database = {
           },
         ]
       }
+      clientes: {
+        Row: {
+          bairro: string | null
+          cep: string | null
+          cidade: string | null
+          complemento: string | null
+          cpf_cnpj: string
+          created_at: string
+          email: string | null
+          endereco: string | null
+          estado: string | null
+          id: string
+          inscricao_estadual: string | null
+          inscricao_municipal: string | null
+          nome_razao_social: string
+          numero: string | null
+          status: Database["public"]["Enums"]["status_geral"]
+          telefone: string | null
+          tipo_pessoa: Database["public"]["Enums"]["tipo_pessoa"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          cpf_cnpj: string
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          estado?: string | null
+          id?: string
+          inscricao_estadual?: string | null
+          inscricao_municipal?: string | null
+          nome_razao_social: string
+          numero?: string | null
+          status?: Database["public"]["Enums"]["status_geral"]
+          telefone?: string | null
+          tipo_pessoa: Database["public"]["Enums"]["tipo_pessoa"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          cpf_cnpj?: string
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          estado?: string | null
+          id?: string
+          inscricao_estadual?: string | null
+          inscricao_municipal?: string | null
+          nome_razao_social?: string
+          numero?: string | null
+          status?: Database["public"]["Enums"]["status_geral"]
+          telefone?: string | null
+          tipo_pessoa?: Database["public"]["Enums"]["tipo_pessoa"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       comissoes: {
         Row: {
           created_at: string
@@ -163,6 +229,7 @@ export type Database = {
       vendas: {
         Row: {
           cliente: string
+          cliente_id: string | null
           created_at: string
           data: string
           data_vencimento: string | null
@@ -175,9 +242,11 @@ export type Database = {
           updated_at: string
           user_id: string
           valor: number
+          vendedor_id: string | null
         }
         Insert: {
           cliente: string
+          cliente_id?: string | null
           created_at?: string
           data?: string
           data_vencimento?: string | null
@@ -190,9 +259,11 @@ export type Database = {
           updated_at?: string
           user_id: string
           valor: number
+          vendedor_id?: string | null
         }
         Update: {
           cliente?: string
+          cliente_id?: string | null
           created_at?: string
           data?: string
           data_vencimento?: string | null
@@ -205,8 +276,16 @@ export type Database = {
           updated_at?: string
           user_id?: string
           valor?: number
+          vendedor_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "vendas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "vendas_indicador_id_fkey"
             columns: ["indicador_id"]
@@ -214,7 +293,50 @@ export type Database = {
             referencedRelation: "indicadores"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "vendas_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "vendedores"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      vendedores: {
+        Row: {
+          created_at: string
+          data_cadastro: string
+          email: string
+          id: string
+          nome: string
+          status: Database["public"]["Enums"]["status_geral"]
+          telefone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data_cadastro?: string
+          email: string
+          id?: string
+          nome: string
+          status?: Database["public"]["Enums"]["status_geral"]
+          telefone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data_cadastro?: string
+          email?: string
+          id?: string
+          nome?: string
+          status?: Database["public"]["Enums"]["status_geral"]
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -226,9 +348,11 @@ export type Database = {
     Enums: {
       status_certificado: "Emitido" | "Pendente" | "Cancelado"
       status_comissao: "Paga" | "Pendente"
+      status_geral: "Ativo" | "Inativo"
       status_indicador: "Ativo" | "Inativo"
       status_pagamento: "Pendente" | "Pago" | "Vencido"
       status_venda: "Pendente" | "Emitido" | "Cancelado"
+      tipo_pessoa: "PF" | "PJ"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -358,9 +482,11 @@ export const Constants = {
     Enums: {
       status_certificado: ["Emitido", "Pendente", "Cancelado"],
       status_comissao: ["Paga", "Pendente"],
+      status_geral: ["Ativo", "Inativo"],
       status_indicador: ["Ativo", "Inativo"],
       status_pagamento: ["Pendente", "Pago", "Vencido"],
       status_venda: ["Pendente", "Emitido", "Cancelado"],
+      tipo_pessoa: ["PF", "PJ"],
     },
   },
 } as const
