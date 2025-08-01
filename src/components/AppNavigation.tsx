@@ -41,6 +41,20 @@ const AppNavigation = () => {
             className="text-slate-600 hover:text-slate-900"
             asChild
           >
+            <Link to="/vendedores">Vendedores</Link>
+          </Button>
+          <Button
+            variant="ghost"
+            className="text-slate-600 hover:text-slate-900"
+            asChild
+          >
+            <Link to="/clientes">Clientes</Link>
+          </Button>
+          <Button
+            variant="ghost"
+            className="text-slate-600 hover:text-slate-900"
+            asChild
+          >
             <Link to="/certificados">Certificados</Link>
           </Button>
           <Button

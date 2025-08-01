@@ -10,6 +10,8 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Vendas from "./pages/Vendas";
 import NovaVenda from "./pages/NovaVenda";
+import Vendedores from "./pages/Vendedores";
+import Clientes from "./pages/Clientes";
 import Certificados from "./pages/Certificados";
 import Indicadores from "./pages/Indicadores";
 import Comissoes from "./pages/Comissoes";
@@ -40,6 +42,16 @@ const App = () => (
             <Route path="/vendas/nova" element={
               <ProtectedRoute>
                 <NovaVenda />
+              </ProtectedRoute>
+            } />
+            <Route path="/vendedores" element={
+              <ProtectedRoute>
+                <Vendedores />
+              </ProtectedRoute>
+            } />
+            <Route path="/clientes" element={
+              <ProtectedRoute>
+                <Clientes />
               </ProtectedRoute>
             } />
             <Route path="/certificados" element={
