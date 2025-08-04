@@ -204,7 +204,7 @@ const NovaVenda = () => {
         valor: valorVenda,
         responsavel: vendedorSelecionado?.nome || responsavel,
         indicador: indicadorSelecionado?.nome || "",
-        indicadorId: indicador || undefined,
+        indicadorId: indicador && indicador !== "none" ? indicador : undefined,
         status: 'Pendente' as const,
         statusPagamento: 'Pendente' as const,
         data: new Date().toISOString()
@@ -295,7 +295,7 @@ const NovaVenda = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {vendedoresLoading ? (
-                      <SelectItem value="" disabled>Carregando vendedores...</SelectItem>
+                      <SelectItem value="loading" disabled>Carregando vendedores...</SelectItem>
                     ) : vendedores.length > 0 ? (
                       vendedores.map((vendedor) => (
                         <SelectItem key={vendedor.id} value={vendedor.id}>
@@ -303,7 +303,7 @@ const NovaVenda = () => {
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="" disabled>Nenhum vendedor cadastrado</SelectItem>
+                      <SelectItem value="empty" disabled>Nenhum vendedor cadastrado</SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -317,9 +317,9 @@ const NovaVenda = () => {
                     <SelectValue placeholder="Selecione o indicador" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhum indicador</SelectItem>
+                    <SelectItem value="none">Nenhum indicador</SelectItem>
                     {indicadoresLoading ? (
-                      <SelectItem value="" disabled>Carregando indicadores...</SelectItem>
+                      <SelectItem value="loading" disabled>Carregando indicadores...</SelectItem>
                     ) : indicadores.length > 0 ? (
                       indicadores.map((indicador) => (
                         <SelectItem key={indicador.id} value={indicador.id}>
@@ -327,7 +327,7 @@ const NovaVenda = () => {
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="" disabled>Nenhum indicador cadastrado</SelectItem>
+                      <SelectItem value="empty" disabled>Nenhum indicador cadastrado</SelectItem>
                     )}
                   </SelectContent>
                 </Select>
