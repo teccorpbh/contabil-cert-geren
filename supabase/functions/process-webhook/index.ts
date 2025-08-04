@@ -62,10 +62,46 @@ Deno.serve(async (req) => {
       throw new Error('Invalid user token');
     }
 
-    const pedidoData: PedidoData = requestData;
+    // Extract id_pedido from request
+    const { id_pedido } = requestData;
+    if (!id_pedido) {
+      throw new Error('id_pedido is required');
+    }
+
+    console.log('Fetching order data from n8n webhook...');
+    
+    // Call n8n webhook to get order data
+    const webhookUrl = "https://n8n.rockethub.com.br/webhook/ea04a06d-d591-426f-b8d8-0cd103ef0fb1";
+    
+    const n8nResponse = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        id_pedido: id_pedido
+      })
+    });
+
+    if (!n8nResponse.ok) {
+      throw new Error(`n8n webhook error: ${n8nResponse.status}`);
+    }
+
+    const n8nData = await n8nResponse.json();
+    console.log('n8n response:', JSON.stringify(n8nData, null, 2));
+
+    if (!n8nData.success) {
+      throw new Error('Order not found in n8n system');
+    }
+
+    // Extract client profile from n8n data
+    const clientProfile = n8nData.data?.clientProfile;
+    if (!clientProfile) {
+      throw new Error('Client profile not found in order data');
+    }
     
     // Check if client already exists by CPF/CNPJ
-    const cpfCnpj = pedidoData.clientProfile.cpf || pedidoData.clientProfile.cnpj;
+    const cpfCnpj = clientProfile.cpf || clientProfile.cnpj;
     if (!cpfCnpj) {
       throw new Error('CPF or CNPJ is required');
     }
@@ -84,20 +120,20 @@ Deno.serve(async (req) => {
       console.log('Creating new client...');
       
       const newClient = {
-        nome_razao_social: pedidoData.clientProfile.socialReason || pedidoData.clientProfile.tradeName || 'Cliente Não Identificado',
+        nome_razao_social: clientProfile.socialReason || clientProfile.tradeName || 'Cliente Não Identificado',
         cpf_cnpj: cpfCnpj,
-        tipo_pessoa: pedidoData.clientProfile.cpf ? 'PF' as const : 'PJ' as const,
-        email: pedidoData.clientProfile.email,
-        telefone: pedidoData.clientProfile.phoneOne,
-        cep: pedidoData.clientProfile.cep,
-        endereco: pedidoData.clientProfile.address,
-        numero: pedidoData.clientProfile.number,
-        complemento: pedidoData.clientProfile.complement,
-        bairro: pedidoData.clientProfile.neighborhood,
-        cidade: pedidoData.clientProfile.city,
-        estado: pedidoData.clientProfile.state,
-        inscricao_municipal: pedidoData.clientProfile.municipalRegistration,
-        inscricao_estadual: pedidoData.clientProfile.stateRegistration,
+        tipo_pessoa: clientProfile.cpf ? 'PF' as const : 'PJ' as const,
+        email: clientProfile.email,
+        telefone: clientProfile.phoneOne,
+        cep: clientProfile.cep,
+        endereco: clientProfile.address,
+        numero: clientProfile.number,
+        complemento: clientProfile.complement,
+        bairro: clientProfile.neighborhood,
+        cidade: clientProfile.city,
+        estado: clientProfile.state,
+        inscricao_municipal: clientProfile.municipalRegistration,
+        inscricao_estadual: clientProfile.stateRegistration,
         status: 'Ativo' as const,
         user_id: user.id,
       };
@@ -124,13 +160,13 @@ Deno.serve(async (req) => {
       success: true,
       clienteId,
       clienteExistente: !!existingClient,
-      dadosCompletos: pedidoData,
+      ...n8nData, // Include all original n8n data
       dadosCliente: existingClient || {
-        nome_razao_social: pedidoData.clientProfile.socialReason || pedidoData.clientProfile.tradeName,
+        nome_razao_social: clientProfile.socialReason || clientProfile.tradeName,
         cpf_cnpj: cpfCnpj,
-        tipo_pessoa: pedidoData.clientProfile.cpf ? 'PF' : 'PJ',
-        email: pedidoData.clientProfile.email,
-        telefone: pedidoData.clientProfile.phoneOne,
+        tipo_pessoa: clientProfile.cpf ? 'PF' : 'PJ',
+        email: clientProfile.email,
+        telefone: clientProfile.phoneOne,
       }
     };
 
