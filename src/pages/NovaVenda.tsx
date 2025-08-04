@@ -7,12 +7,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText, Save, Search } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useVendas } from "@/hooks/useVendas";
+import { useVendedores } from "@/hooks/useVendedores";
+import { useIndicadores } from "@/hooks/useIndicadores";
+import { useClientes } from "@/hooks/useClientes";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface PedidoData {
   success: string;
   timestamp: string;
+  clienteId?: string; // ID do cliente criado/encontrado pela edge function
   debug: {
     orderNumber?: string;
     lastPaymentStatus?: string;
@@ -80,7 +88,15 @@ const NovaVenda = () => {
   const [indicador, setIndicador] = useState("");
   const [pedidoData, setPedidoData] = useState<PedidoData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [clienteId, setClienteId] = useState<string | null>(null);
+  
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { vendedores, loading: vendedoresLoading } = useVendedores();
+  const { indicadores, loading: indicadoresLoading } = useIndicadores();
+  const { createVenda } = useVendas();
+  const { findClienteByCpfCnpj } = useClientes();
 
   const handleBuscarPedido = async () => {
     if (!pedidoSegura.trim()) {
@@ -92,26 +108,28 @@ const NovaVenda = () => {
       return;
     }
 
+    if (!user) {
+      toast({
+        title: "Erro",
+        description: "Usuário não autenticado",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      // URL do webhook n8n
-      const webhookUrl = "https://n8n.rockethub.com.br/webhook/ea04a06d-d591-426f-b8d8-0cd103ef0fb1";
-      
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id_pedido: pedidoSegura
-        })
+      // Chamar a edge function process-webhook
+      const { data, error } = await supabase.functions.invoke('process-webhook', {
+        body: {
+          id_pedido: pedidoSegura,
+          user_id: user.id
+        }
       });
 
-      if (!response.ok) {
-        throw new Error(`Erro na requisição: ${response.status}`);
+      if (error) {
+        throw error;
       }
-
-      const data: PedidoData = await response.json();
 
       if (!data.success) {
         toast({
@@ -123,28 +141,23 @@ const NovaVenda = () => {
       }
 
       setPedidoData(data);
+      setClienteId(data.clienteId);
       
-      // Preencher automaticamente alguns campos
-      if (data.data?.clientProfile?.socialReason || data.data?.clientProfile?.tradeName) {
-        // Aqui você pode preencher outros campos automaticamente se necessário
-      }
-      
+      // Preencher automaticamente o valor da venda
       if (data.data?.productData?.value) {
-        // Remove "R$ " do início da string para extrair apenas o valor numérico
-        const valor = data.data.productData.value.replace('R$ ', '').replace(',', '.');
         setValorVenda(data.data.productData.value);
       }
 
       toast({
         title: "Sucesso",
-        description: "Dados do pedido carregados com sucesso!",
+        description: "Dados do pedido carregados com sucesso! Cliente criado/atualizado.",
       });
 
     } catch (error: any) {
       console.error('Erro ao buscar pedido:', error);
       toast({
         title: "Erro de conexão",
-        description: "Não foi possível conectar ao sistema da Segura Online. Tente novamente.",
+        description: "Não foi possível conectar ao sistema. Tente novamente.",
         variant: "destructive"
       });
     } finally {
@@ -152,9 +165,71 @@ const NovaVenda = () => {
     }
   };
 
-  const handleSalvarVenda = () => {
-    console.log("Salvando venda...");
-    // Aqui seria feita a criação da venda
+  const handleSalvarVenda = async () => {
+    if (!pedidoSegura.trim() || !valorVenda.trim() || !responsavel.trim()) {
+      toast({
+        title: "Erro",
+        description: "Por favor, preencha todos os campos obrigatórios",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!user) {
+      toast({
+        title: "Erro",
+        description: "Usuário não autenticado",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Encontrar o vendedor selecionado
+      const vendedorSelecionado = vendedores.find(v => v.id === responsavel);
+      
+      // Encontrar o indicador selecionado (se houver)
+      const indicadorSelecionado = indicador ? indicadores.find(i => i.id === indicador) : null;
+
+      // Nome do cliente (da busca ou manual)
+      const nomeCliente = pedidoData?.data?.clientProfile?.socialReason || 
+                         pedidoData?.data?.clientProfile?.tradeName || 
+                         "Cliente não identificado";
+
+      // Preparar dados da venda
+      const vendaData = {
+        pedidoSegura: pedidoSegura,
+        cliente: nomeCliente,
+        valor: valorVenda,
+        responsavel: vendedorSelecionado?.nome || responsavel,
+        indicador: indicadorSelecionado?.nome || "",
+        indicadorId: indicador || undefined,
+        status: 'Pendente' as const,
+        statusPagamento: 'Pendente' as const,
+        data: new Date().toISOString()
+      };
+
+      await createVenda(vendaData);
+
+      toast({
+        title: "Sucesso",
+        description: "Venda registrada com sucesso!",
+      });
+
+      // Redirecionar para a lista de vendas
+      navigate('/vendas');
+
+    } catch (error: any) {
+      console.error('Erro ao salvar venda:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar a venda. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -219,10 +294,17 @@ const NovaVenda = () => {
                     <SelectValue placeholder="Selecione o responsável" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="joao">João Silva</SelectItem>
-                    <SelectItem value="ana">Ana Costa</SelectItem>
-                    <SelectItem value="carlos">Carlos Oliveira</SelectItem>
-                    <SelectItem value="maria">Maria Santos</SelectItem>
+                    {vendedoresLoading ? (
+                      <SelectItem value="" disabled>Carregando vendedores...</SelectItem>
+                    ) : vendedores.length > 0 ? (
+                      vendedores.map((vendedor) => (
+                        <SelectItem key={vendedor.id} value={vendedor.id}>
+                          {vendedor.nome}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="" disabled>Nenhum vendedor cadastrado</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -235,10 +317,18 @@ const NovaVenda = () => {
                     <SelectValue placeholder="Selecione o indicador" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="maria">Maria Santos</SelectItem>
-                    <SelectItem value="pedro">Pedro Lima</SelectItem>
-                    <SelectItem value="lucas">Lucas Ferreira</SelectItem>
-                    <SelectItem value="patricia">Patrícia Rocha</SelectItem>
+                    <SelectItem value="">Nenhum indicador</SelectItem>
+                    {indicadoresLoading ? (
+                      <SelectItem value="" disabled>Carregando indicadores...</SelectItem>
+                    ) : indicadores.length > 0 ? (
+                      indicadores.map((indicador) => (
+                        <SelectItem key={indicador.id} value={indicador.id}>
+                          {indicador.nome}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="" disabled>Nenhum indicador cadastrado</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -453,11 +543,20 @@ const NovaVenda = () => {
 
               {/* Botões */}
               <div className="flex gap-4 pt-6">
-                <Button onClick={handleSalvarVenda} className="flex-1 bg-indigo-600 hover:bg-indigo-700">
+                <Button 
+                  onClick={handleSalvarVenda} 
+                  className="flex-1"
+                  disabled={loading || !pedidoSegura.trim() || !valorVenda.trim() || !responsavel.trim()}
+                >
                   <Save className="h-4 w-4 mr-2" />
-                  Salvar Venda
+                  {loading ? "Salvando..." : "Salvar Venda"}
                 </Button>
-                <Button variant="outline" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => navigate('/vendas')}
+                  disabled={loading}
+                >
                   Cancelar
                 </Button>
               </div>
