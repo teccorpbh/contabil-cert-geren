@@ -8,8 +8,10 @@ export interface Venda {
   id: string;
   pedidoSegura: string;
   cliente: string;
+  clienteId?: string;
   valor: string;
   responsavel: string;
+  vendedorId?: string;
   indicador: string;
   indicadorId?: string;
   status: 'Pendente' | 'Emitido' | 'Cancelado';
@@ -35,6 +37,9 @@ export const useVendas = () => {
           *,
           indicadores (
             nome
+          ),
+          vendedores (
+            nome
           )
         `)
         .order('created_at', { ascending: false });
@@ -45,8 +50,10 @@ export const useVendas = () => {
         id: item.id,
         pedidoSegura: item.pedido_segura,
         cliente: item.cliente,
+        clienteId: item.cliente_id,
         valor: `R$ ${Number(item.valor).toFixed(2).replace('.', ',')}`,
-        responsavel: item.responsavel,
+        responsavel: item.vendedores?.nome || item.responsavel,
+        vendedorId: item.vendedor_id,
         indicador: item.indicadores?.nome || '-',
         indicadorId: item.indicador_id,
         status: item.status,
@@ -83,8 +90,10 @@ export const useVendas = () => {
         .insert({
           pedido_segura: venda.pedidoSegura,
           cliente: venda.cliente,
+          cliente_id: venda.clienteId || null,
           valor: valorNumerico,
           responsavel: venda.responsavel,
+          vendedor_id: venda.vendedorId || null,
           indicador_id: venda.indicadorId || null,
           status: venda.status,
           status_pagamento: venda.statusPagamento,
@@ -112,11 +121,13 @@ export const useVendas = () => {
       const updateData: any = {};
       if (updatedVenda.pedidoSegura) updateData.pedido_segura = updatedVenda.pedidoSegura;
       if (updatedVenda.cliente) updateData.cliente = updatedVenda.cliente;
+      if (updatedVenda.clienteId !== undefined) updateData.cliente_id = updatedVenda.clienteId || null;
       if (updatedVenda.valor) {
         const valorNumerico = parseFloat(updatedVenda.valor.replace('R$', '').replace(',', '.').trim());
         updateData.valor = valorNumerico;
       }
       if (updatedVenda.responsavel) updateData.responsavel = updatedVenda.responsavel;
+      if (updatedVenda.vendedorId !== undefined) updateData.vendedor_id = updatedVenda.vendedorId || null;
       if (updatedVenda.indicadorId !== undefined) updateData.indicador_id = updatedVenda.indicadorId || null;
       if (updatedVenda.status) updateData.status = updatedVenda.status;
       if (updatedVenda.statusPagamento) updateData.status_pagamento = updatedVenda.statusPagamento;

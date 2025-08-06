@@ -201,8 +201,10 @@ const NovaVenda = () => {
       const vendaData = {
         pedidoSegura: pedidoSegura,
         cliente: nomeCliente,
+        clienteId: clienteId,
         valor: valorVenda,
         responsavel: vendedorSelecionado?.nome || responsavel,
+        vendedorId: responsavel,
         indicador: indicadorSelecionado?.nome || "",
         indicadorId: indicador && indicador !== "none" ? indicador : undefined,
         status: 'Pendente' as const,
