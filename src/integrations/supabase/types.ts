@@ -309,6 +309,7 @@ export type Database = {
           email: string
           id: string
           nome: string
+          percentual_comissao: number
           status: Database["public"]["Enums"]["status_geral"]
           telefone: string | null
           updated_at: string
@@ -320,6 +321,7 @@ export type Database = {
           email: string
           id?: string
           nome: string
+          percentual_comissao?: number
           status?: Database["public"]["Enums"]["status_geral"]
           telefone?: string | null
           updated_at?: string
@@ -331,6 +333,7 @@ export type Database = {
           email?: string
           id?: string
           nome?: string
+          percentual_comissao?: number
           status?: Database["public"]["Enums"]["status_geral"]
           telefone?: string | null
           updated_at?: string

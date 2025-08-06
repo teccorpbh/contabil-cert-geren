@@ -20,6 +20,7 @@ export function VendedorModal({ isOpen, onClose, onSave, vendedor, mode }: Vende
     email: '',
     telefone: '',
     status: 'Ativo' as 'Ativo' | 'Inativo',
+    percentualComissao: 5,
   });
 
   useEffect(() => {
@@ -29,6 +30,7 @@ export function VendedorModal({ isOpen, onClose, onSave, vendedor, mode }: Vende
         email: vendedor.email || '',
         telefone: vendedor.telefone || '',
         status: vendedor.status || 'Ativo',
+        percentualComissao: vendedor.percentualComissao || 5,
       });
     } else {
       setFormData({
@@ -36,6 +38,7 @@ export function VendedorModal({ isOpen, onClose, onSave, vendedor, mode }: Vende
         email: '',
         telefone: '',
         status: 'Ativo',
+        percentualComissao: 5,
       });
     }
   }, [vendedor, mode, isOpen]);
@@ -108,6 +111,20 @@ export function VendedorModal({ isOpen, onClose, onSave, vendedor, mode }: Vende
                 <SelectItem value="Inativo">Inativo</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="percentualComissao">Percentual de Comissão (%)</Label>
+            <Input
+              id="percentualComissao"
+              type="number"
+              min="0"
+              max="100"
+              value={formData.percentualComissao}
+              onChange={(e) => setFormData({ ...formData, percentualComissao: parseInt(e.target.value) || 0 })}
+              disabled={isReadOnly}
+              placeholder="5"
+            />
           </div>
         </div>
 

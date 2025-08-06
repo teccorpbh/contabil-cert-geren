@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Venda } from '@/hooks/useVendas';
 import { useIndicadores } from '@/hooks/useIndicadores';
+import { useVendedores } from '@/hooks/useVendedores';
 
 interface VendaModalProps {
   isOpen: boolean;
@@ -18,12 +19,14 @@ interface VendaModalProps {
 
 const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) => {
   const { indicadores } = useIndicadores();
+  const { vendedores } = useVendedores();
   
   const [formData, setFormData] = useState({
     pedidoSegura: '',
     cliente: '',
     valor: '',
     responsavel: '',
+    vendedorId: '',
     indicador: '',
     indicadorId: '',
     status: 'Pendente' as 'Pendente' | 'Emitido' | 'Cancelado',
@@ -39,6 +42,7 @@ const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) =
         cliente: venda.cliente,
         valor: venda.valor,
         responsavel: venda.responsavel,
+        vendedorId: venda.vendedorId || '',
         indicador: venda.indicador,
         indicadorId: venda.indicadorId || '',
         status: venda.status,
@@ -52,6 +56,7 @@ const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) =
         cliente: '',
         valor: '',
         responsavel: '',
+        vendedorId: '',
         indicador: '',
         indicadorId: '',
         status: 'Pendente',
@@ -64,10 +69,13 @@ const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) =
 
   const handleSave = () => {
     const selectedIndicador = indicadores.find(ind => ind.id === formData.indicadorId);
+    const selectedVendedor = vendedores.find(vend => vend.id === formData.vendedorId);
     const saveData = {
       ...formData,
       indicador: selectedIndicador?.nome || '-',
-      indicadorId: formData.indicadorId === 'none' ? '' : formData.indicadorId
+      indicadorId: formData.indicadorId === 'none' ? '' : formData.indicadorId,
+      responsavel: selectedVendedor?.nome || formData.responsavel,
+      vendedorId: formData.vendedorId === 'none' ? '' : formData.vendedorId
     };
     onSave(saveData);
     onClose();
@@ -117,14 +125,24 @@ const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) =
 
           <div>
             <Label>Responsável</Label>
-            <Select value={formData.responsavel} onValueChange={(value) => setFormData({...formData, responsavel: value})} disabled={isReadOnly}>
+            <Select 
+              value={formData.vendedorId || 'none'} 
+              onValueChange={(value) => setFormData({...formData, vendedorId: value})} 
+              disabled={isReadOnly}
+            >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Selecione um vendedor" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="João Silva">João Silva</SelectItem>
-                <SelectItem value="Ana Costa">Ana Costa</SelectItem>
-                <SelectItem value="Carlos Oliveira">Carlos Oliveira</SelectItem>
+                <SelectItem value="none">Sem vendedor</SelectItem>
+                {vendedores
+                  .filter(vend => vend.status === 'Ativo')
+                  .map((vendedor) => (
+                    <SelectItem key={vendedor.id} value={vendedor.id}>
+                      {vendedor.nome}
+                    </SelectItem>
+                  ))
+                }
               </SelectContent>
             </Select>
           </div>

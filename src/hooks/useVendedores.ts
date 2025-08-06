@@ -8,6 +8,7 @@ export interface Vendedor {
   email: string;
   telefone?: string;
   status: 'Ativo' | 'Inativo';
+  percentualComissao: number;
   data_cadastro: string;
   user_id: string;
   created_at: string;
@@ -19,6 +20,7 @@ export interface VendedorInsert {
   email: string;
   telefone?: string;
   status?: 'Ativo' | 'Inativo';
+  percentual_comissao?: number;
   user_id: string;
 }
 
@@ -27,6 +29,7 @@ export interface VendedorUpdate {
   email?: string;
   telefone?: string;
   status?: 'Ativo' | 'Inativo';
+  percentual_comissao?: number;
 }
 
 export function useVendedores() {
@@ -43,7 +46,13 @@ export function useVendedores() {
         .order('nome', { ascending: true });
 
       if (error) throw error;
-      setVendedores(data || []);
+      
+      const mappedVendedores = (data || []).map(vendedor => ({
+        ...vendedor,
+        percentualComissao: vendedor.percentual_comissao || 5
+      }));
+      
+      setVendedores(mappedVendedores);
     } catch (error) {
       console.error('Erro ao buscar vendedores:', error);
       toast({
@@ -66,7 +75,12 @@ export function useVendedores() {
 
       if (error) throw error;
 
-      setVendedores(prev => [...prev, data]);
+      const mappedVendedor = {
+        ...data,
+        percentualComissao: data.percentual_comissao || 5
+      };
+
+      setVendedores(prev => [...prev, mappedVendedor]);
       toast({
         title: "Sucesso",
         description: "Vendedor criado com sucesso!",
@@ -94,9 +108,14 @@ export function useVendedores() {
 
       if (error) throw error;
 
+      const mappedData = {
+        ...data,
+        percentualComissao: data.percentual_comissao || 5
+      };
+
       setVendedores(prev => 
         prev.map(vendedor => 
-          vendedor.id === id ? { ...vendedor, ...data } : vendedor
+          vendedor.id === id ? { ...vendedor, ...mappedData } : vendedor
         )
       );
       toast({

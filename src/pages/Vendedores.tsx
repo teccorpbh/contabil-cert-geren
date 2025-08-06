@@ -55,10 +55,14 @@ export default function Vendedores() {
     if (modalMode === 'create') {
       await createVendedor({
         ...vendedorData,
+        percentual_comissao: vendedorData.percentualComissao || 5,
         user_id: user?.id || '',
       });
     } else if (modalMode === 'edit' && selectedVendedor) {
-      await updateVendedor(selectedVendedor.id, vendedorData);
+      await updateVendedor(selectedVendedor.id, {
+        ...vendedorData,
+        percentual_comissao: vendedorData.percentualComissao || 5
+      });
     }
   };
 
@@ -107,6 +111,7 @@ export default function Vendedores() {
                       <TableHead>Nome</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Telefone</TableHead>
+                      <TableHead>Comissão (%)</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Data Cadastro</TableHead>
                       <TableHead>Ações</TableHead>
@@ -118,6 +123,7 @@ export default function Vendedores() {
                         <TableCell className="font-medium">{vendedor.nome}</TableCell>
                         <TableCell>{vendedor.email}</TableCell>
                         <TableCell>{vendedor.telefone || '-'}</TableCell>
+                        <TableCell>{vendedor.percentualComissao}%</TableCell>
                         <TableCell>
                           <Badge variant={getStatusColor(vendedor.status)}>
                             {vendedor.status}
@@ -172,7 +178,7 @@ export default function Vendedores() {
                     ))}
                     {filteredVendedores.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                           Nenhum vendedor encontrado
                         </TableCell>
                       </TableRow>
