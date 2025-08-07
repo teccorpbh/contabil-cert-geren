@@ -67,9 +67,20 @@ export function useVendedores() {
 
   const createVendedor = async (vendedor: VendedorInsert) => {
     try {
+      // Mapear percentualComissao para percentual_comissao
+      const dbVendedor = {
+        ...vendedor,
+        percentual_comissao: (vendedor as any).percentualComissao || vendedor.percentual_comissao || 5
+      };
+      
+      // Remove percentualComissao se existir no objeto
+      const { percentualComissao, ...vendedorData } = dbVendedor as any;
+      
+      console.log('Criando vendedor:', vendedorData);
+      
       const { data, error } = await supabase
         .from('vendedores')
-        .insert([vendedor])
+        .insert([vendedorData])
         .select()
         .single();
 
@@ -99,9 +110,20 @@ export function useVendedores() {
 
   const updateVendedor = async (id: string, updates: VendedorUpdate) => {
     try {
+      // Mapear percentualComissao para percentual_comissao
+      const dbUpdates = {
+        ...updates,
+        percentual_comissao: (updates as any).percentualComissao || updates.percentual_comissao
+      };
+      
+      // Remove percentualComissao se existir no objeto
+      const { percentualComissao, ...updateData } = dbUpdates as any;
+      
+      console.log('Atualizando vendedor:', updateData);
+      
       const { data, error } = await supabase
         .from('vendedores')
-        .update(updates)
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();

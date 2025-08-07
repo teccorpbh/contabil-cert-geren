@@ -80,28 +80,55 @@ export const useVendas = () => {
   }, [user]);
 
   const createVenda = async (venda: Omit<Venda, 'id'>) => {
-    if (!user) return;
+    if (!user) {
+      console.error('Usuário não autenticado');
+      toast({
+        title: "Erro",
+        description: "Usuário não autenticado",
+        variant: "destructive"
+      });
+      return;
+    }
 
     try {
-      const valorNumerico = parseFloat(venda.valor.replace('R$', '').replace(',', '.').trim());
+      console.log('Dados da venda recebidos:', venda);
+      console.log('User ID:', user.id);
       
-      const { error } = await supabase
+      const valorNumerico = parseFloat(venda.valor.replace('R$', '').replace(',', '.').trim());
+      console.log('Valor numérico processado:', valorNumerico);
+      
+      const vendaData = {
+        pedido_segura: venda.pedidoSegura,
+        cliente: venda.cliente,
+        cliente_id: venda.clienteId || null,
+        valor: valorNumerico,
+        responsavel: venda.responsavel,
+        vendedor_id: venda.vendedorId || null,
+        indicador_id: venda.indicadorId || null,
+        status: venda.status,
+        status_pagamento: venda.statusPagamento,
+        data_vencimento: venda.dataVencimento ? new Date(venda.dataVencimento).toISOString() : null,
+        user_id: user.id
+      };
+      
+      console.log('Dados para inserção no banco:', vendaData);
+      
+      const { data, error } = await supabase
         .from('vendas')
-        .insert({
-          pedido_segura: venda.pedidoSegura,
-          cliente: venda.cliente,
-          cliente_id: venda.clienteId || null,
-          valor: valorNumerico,
-          responsavel: venda.responsavel,
-          vendedor_id: venda.vendedorId || null,
-          indicador_id: venda.indicadorId || null,
-          status: venda.status,
-          status_pagamento: venda.statusPagamento,
-          data_vencimento: venda.dataVencimento ? new Date(venda.dataVencimento).toISOString() : null,
-          user_id: user.id
-        });
+        .insert([vendaData])
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro do Supabase:', error);
+        throw error;
+      }
+      
+      console.log('Venda criada com sucesso:', data);
+      
+      toast({
+        title: "Sucesso",
+        description: "Venda criada com sucesso!",
+      });
       
       await fetchVendas();
     } catch (error: any) {
