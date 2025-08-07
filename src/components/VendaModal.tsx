@@ -73,9 +73,9 @@ const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) =
     const saveData = {
       ...formData,
       indicador: selectedIndicador?.nome || '-',
-      indicadorId: formData.indicadorId === 'none' ? '' : formData.indicadorId,
+      indicadorId: (formData.indicadorId === 'none' || !formData.indicadorId) ? undefined : formData.indicadorId,
       responsavel: selectedVendedor?.nome || formData.responsavel,
-      vendedorId: formData.vendedorId === 'none' ? '' : formData.vendedorId
+      vendedorId: (formData.vendedorId === 'none' || !formData.vendedorId) ? undefined : formData.vendedorId
     };
     onSave(saveData);
     onClose();

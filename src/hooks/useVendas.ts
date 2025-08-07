@@ -97,6 +97,34 @@ export const useVendas = () => {
       const valorNumerico = parseFloat(venda.valor.replace('R$', '').replace(',', '.').trim());
       console.log('Valor numérico processado:', valorNumerico);
       
+      // Validar se vendedor_id existe na tabela vendedores (se fornecido)
+      if (venda.vendedorId) {
+        const { data: vendedorExists } = await supabase
+          .from('vendedores')
+          .select('id')
+          .eq('id', venda.vendedorId)
+          .single();
+        
+        if (!vendedorExists) {
+          throw new Error('Vendedor selecionado não encontrado');
+        }
+        console.log('Vendedor validado:', vendedorExists.id);
+      }
+      
+      // Validar se indicador_id existe na tabela indicadores (se fornecido)
+      if (venda.indicadorId) {
+        const { data: indicadorExists } = await supabase
+          .from('indicadores')
+          .select('id')
+          .eq('id', venda.indicadorId)
+          .single();
+        
+        if (!indicadorExists) {
+          throw new Error('Indicador selecionado não encontrado');
+        }
+        console.log('Indicador validado:', indicadorExists.id);
+      }
+      
       const vendaData = {
         pedido_segura: venda.pedidoSegura,
         cliente: venda.cliente,
