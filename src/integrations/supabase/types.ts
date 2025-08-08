@@ -135,7 +135,7 @@ export type Database = {
           created_at: string
           data_pagamento: string | null
           id: string
-          indicador_id: string
+          indicador_id: string | null
           observacoes: string | null
           percentual: number
           status: Database["public"]["Enums"]["status_comissao"]
@@ -143,12 +143,13 @@ export type Database = {
           user_id: string
           valor: number
           venda_id: string
+          vendedor_id: string | null
         }
         Insert: {
           created_at?: string
           data_pagamento?: string | null
           id?: string
-          indicador_id: string
+          indicador_id?: string | null
           observacoes?: string | null
           percentual: number
           status?: Database["public"]["Enums"]["status_comissao"]
@@ -156,12 +157,13 @@ export type Database = {
           user_id: string
           valor: number
           venda_id: string
+          vendedor_id?: string | null
         }
         Update: {
           created_at?: string
           data_pagamento?: string | null
           id?: string
-          indicador_id?: string
+          indicador_id?: string | null
           observacoes?: string | null
           percentual?: number
           status?: Database["public"]["Enums"]["status_comissao"]
@@ -169,6 +171,7 @@ export type Database = {
           user_id?: string
           valor?: number
           venda_id?: string
+          vendedor_id?: string | null
         }
         Relationships: [
           {
@@ -183,6 +186,13 @@ export type Database = {
             columns: ["venda_id"]
             isOneToOne: false
             referencedRelation: "vendas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comissoes_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "vendedores"
             referencedColumns: ["id"]
           },
         ]

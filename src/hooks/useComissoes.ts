@@ -8,7 +8,9 @@ export interface Comissao {
   id: string;
   vendaId: string;
   indicador: string;
-  indicadorId: string;
+  indicadorId?: string;
+  vendedor?: string;
+  vendedorId?: string;
   valor: string;
   percentual: string;
   status: 'Pendente' | 'Paga';
@@ -34,6 +36,9 @@ export const useComissoes = () => {
           indicadores (
             nome
           ),
+          vendedores (
+            nome
+          ),
           vendas (
             pedido_segura
           )
@@ -45,8 +50,10 @@ export const useComissoes = () => {
       const mappedComissoes: Comissao[] = data.map(item => ({
         id: item.id,
         vendaId: item.venda_id,
-        indicador: item.indicadores?.nome || 'N/A',
+        indicador: item.indicadores?.nome || (item.vendedores?.nome ? '' : 'N/A'),
         indicadorId: item.indicador_id,
+        vendedor: item.vendedores?.nome || '',
+        vendedorId: item.vendedor_id,
         valor: `R$ ${Number(item.valor).toFixed(2).replace('.', ',')}`,
         percentual: `${item.percentual}%`,
         status: item.status,
@@ -82,18 +89,27 @@ export const useComissoes = () => {
       const valorNumerico = parseFloat(comissao.valor.replace('R$', '').replace(',', '.').trim());
       const percentualNumerico = parseInt(comissao.percentual.replace('%', ''));
       
+      const insertData: any = {
+        venda_id: comissao.vendaId,
+        valor: valorNumerico,
+        percentual: percentualNumerico,
+        status: comissao.status,
+        data_pagamento: comissao.dataPagamento ? new Date(comissao.dataPagamento).toISOString() : null,
+        observacoes: comissao.observacoes,
+        user_id: user.id
+      };
+
+      // Adicionar indicador_id ou vendedor_id conforme apropriado
+      if (comissao.indicadorId) {
+        insertData.indicador_id = comissao.indicadorId;
+      }
+      if (comissao.vendedorId) {
+        insertData.vendedor_id = comissao.vendedorId;
+      }
+      
       const { error } = await supabase
         .from('comissoes')
-        .insert({
-          venda_id: comissao.vendaId,
-          indicador_id: comissao.indicadorId,
-          valor: valorNumerico,
-          percentual: percentualNumerico,
-          status: comissao.status,
-          data_pagamento: comissao.dataPagamento ? new Date(comissao.dataPagamento).toISOString() : null,
-          observacoes: comissao.observacoes,
-          user_id: user.id
-        });
+        .insert(insertData);
 
       if (error) throw error;
       
@@ -114,7 +130,8 @@ export const useComissoes = () => {
     try {
       const updateData: any = {};
       if (updatedComissao.vendaId) updateData.venda_id = updatedComissao.vendaId;
-      if (updatedComissao.indicadorId) updateData.indicador_id = updatedComissao.indicadorId;
+      if (updatedComissao.indicadorId !== undefined) updateData.indicador_id = updatedComissao.indicadorId || null;
+      if (updatedComissao.vendedorId !== undefined) updateData.vendedor_id = updatedComissao.vendedorId || null;
       if (updatedComissao.valor) {
         const valorNumerico = parseFloat(updatedComissao.valor.replace('R$', '').replace(',', '.').trim());
         updateData.valor = valorNumerico;
