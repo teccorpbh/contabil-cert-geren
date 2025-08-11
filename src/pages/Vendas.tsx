@@ -64,10 +64,7 @@ const Vendas = () => {
   };
 
   const handleView = (id: string) => {
-    const venda = getVenda(id);
-    setSelectedVenda(venda);
-    setModalMode('view');
-    setModalOpen(true);
+    navigate(`/vendas/${id}`);
   };
 
   const handleEdit = (id: string) => {
@@ -111,7 +108,7 @@ const Vendas = () => {
             <h1 className="text-3xl font-bold text-slate-900">Vendas</h1>
             <p className="text-slate-600 mt-2">Gerencie todas as vendas de certificados digitais</p>
           </div>
-          <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={handleCreate}>
+          <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={handleCreate} aria-label="Criar nova venda">
             <Plus className="h-4 w-4 mr-2" />
             Nova Venda
           </Button>
@@ -153,9 +150,9 @@ const Vendas = () => {
                     </Badge>
                   </TableCell>
                   <TableCell>{venda.data}</TableCell>
-                  <TableCell>
+                  <TableCell aria-label={`Ações da venda ${venda.pedidoSegura}`}>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => handleView(venda.id)}>
+                      <Button size="sm" variant="outline" onClick={() => handleView(venda.id)} aria-label={`Visualizar venda ${venda.pedidoSegura}`}>
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => handleEdit(venda.id)}>
@@ -163,7 +160,7 @@ const Vendas = () => {
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="outline">
+                          <Button size="sm" variant="outline" aria-label={`Excluir venda ${venda.pedidoSegura}`}>
                             <Trash className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>
@@ -176,7 +173,7 @@ const Vendas = () => {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(venda.id)}>
+                            <AlertDialogAction onClick={() => handleDelete(venda.id)} aria-label="Confirmar exclusão">
                               Excluir
                             </AlertDialogAction>
                           </AlertDialogFooter>
