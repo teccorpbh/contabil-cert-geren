@@ -16,7 +16,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const Agendamentos = () => {
-  const { agendamentos, loading, deleteAgendamento, updateAgendamento } = useAgendamentos();
+  const { agendamentos, loading, deleteAgendamento, updateAgendamento, createAgendamento } = useAgendamentos();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'view' | 'edit' | 'create'>('view');
   const [selectedAgendamento, setSelectedAgendamento] = useState<Agendamento | null>(null);
@@ -66,8 +66,16 @@ const Agendamentos = () => {
   };
 
   const handleSave = async (agendamento: Omit<Agendamento, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+    console.log('handleSave called with:', agendamento);
+    console.log('Modal mode:', modalMode);
+    console.log('Selected agendamento:', selectedAgendamento);
+    
     if (modalMode === 'edit' && selectedAgendamento) {
+      console.log('Updating agendamento...');
       await updateAgendamento(selectedAgendamento.id, agendamento);
+    } else if (modalMode === 'create') {
+      console.log('Creating new agendamento...');
+      await createAgendamento(agendamento);
     }
     setModalOpen(false);
   };

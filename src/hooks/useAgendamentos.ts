@@ -72,7 +72,13 @@ export const useAgendamentos = () => {
   };
 
   const createAgendamento = async (agendamento: Omit<Agendamento, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-    if (!user) return;
+    if (!user) {
+      console.log('No user found, cannot create agendamento');
+      return;
+    }
+
+    console.log('Creating agendamento with user:', user.id);
+    console.log('Agendamento data:', agendamento);
 
     try {
       const { data, error } = await supabase
@@ -86,7 +92,7 @@ export const useAgendamentos = () => {
         .single();
 
       if (error) {
-        console.error('Error creating agendamento:', error);
+        console.error('Supabase error creating agendamento:', error);
         toast({
           title: "Erro ao criar agendamento",
           description: error.message,
@@ -95,6 +101,7 @@ export const useAgendamentos = () => {
         return;
       }
 
+      console.log('Agendamento created successfully:', data);
       setAgendamentos(prev => [data, ...prev]);
       toast({
         title: "Agendamento criado",
@@ -103,7 +110,7 @@ export const useAgendamentos = () => {
 
       return data;
     } catch (error: any) {
-      console.error('Error creating agendamento:', error);
+      console.error('Unexpected error creating agendamento:', error);
       toast({
         title: "Erro ao criar agendamento",
         description: "Ocorreu um erro inesperado",

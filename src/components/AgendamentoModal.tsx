@@ -11,6 +11,7 @@ import { useClientes } from '@/hooks/useClientes';
 import { Agendamento } from '@/hooks/useAgendamentos';
 import { Calendar, Clock, User, DollarSign, FileText } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from '@/hooks/use-toast';
 import { ptBR } from 'date-fns/locale';
 
 interface AgendamentoModalProps {
@@ -56,12 +57,43 @@ export const AgendamentoModal = ({ isOpen, onClose, onSave, agendamento, mode }:
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Form submitted with data:', formData);
+    
+    // Validate required fields
+    if (!formData.pedido_segura) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Pedido Segura é obrigatório",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!formData.data_agendamento) {
+      toast({
+        title: "Campos obrigatórios", 
+        description: "Data e hora do agendamento são obrigatórios",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!formData.venda_id) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Venda relacionada é obrigatória",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const agendamentoData = {
       ...formData,
       data_agendamento: new Date(formData.data_agendamento).toISOString(),
       cliente_id: formData.cliente_id === 'none' ? null : formData.cliente_id || null,
     };
 
+    console.log('Processed data for save:', agendamentoData);
     onSave(agendamentoData);
   };
 
