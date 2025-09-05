@@ -38,7 +38,7 @@ export const AgendamentoModal = ({ isOpen, onClose, onSave, agendamento, mode }:
       setFormData({
         venda_id: agendamento.venda_id,
         pedido_segura: agendamento.pedido_segura,
-        cliente_id: agendamento.cliente_id || '',
+        cliente_id: agendamento.cliente_id || 'none',
         data_agendamento: format(new Date(agendamento.data_agendamento), "yyyy-MM-dd'T'HH:mm"),
         status: agendamento.status,
       });
@@ -46,7 +46,7 @@ export const AgendamentoModal = ({ isOpen, onClose, onSave, agendamento, mode }:
       setFormData({
         venda_id: '',
         pedido_segura: '',
-        cliente_id: '',
+        cliente_id: 'none',
         data_agendamento: '',
         status: 'Agendado' as 'Agendado' | 'Realizado' | 'Cancelado' | 'Reagendado',
       });
@@ -59,7 +59,7 @@ export const AgendamentoModal = ({ isOpen, onClose, onSave, agendamento, mode }:
     const agendamentoData = {
       ...formData,
       data_agendamento: new Date(formData.data_agendamento).toISOString(),
-      cliente_id: formData.cliente_id || null,
+      cliente_id: formData.cliente_id === 'none' ? null : formData.cliente_id || null,
     };
 
     onSave(agendamentoData);
@@ -196,7 +196,7 @@ export const AgendamentoModal = ({ isOpen, onClose, onSave, agendamento, mode }:
                 <SelectValue placeholder="Selecione um cliente" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Nenhum cliente selecionado</SelectItem>
+                <SelectItem value="none">Nenhum cliente selecionado</SelectItem>
                 {clientes.map((cliente) => (
                   <SelectItem key={cliente.id} value={cliente.id}>
                     {cliente.nome_razao_social} - {cliente.cpf_cnpj}
