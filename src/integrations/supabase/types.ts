@@ -7,13 +7,64 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.12 (cd3cf9e)"
   }
   public: {
     Tables: {
+      agendamentos: {
+        Row: {
+          cliente_id: string | null
+          created_at: string
+          data_agendamento: string
+          id: string
+          pedido_segura: string
+          status: Database["public"]["Enums"]["status_agendamento"]
+          updated_at: string
+          user_id: string
+          venda_id: string
+        }
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string
+          data_agendamento: string
+          id?: string
+          pedido_segura: string
+          status?: Database["public"]["Enums"]["status_agendamento"]
+          updated_at?: string
+          user_id: string
+          venda_id: string
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string
+          data_agendamento?: string
+          id?: string
+          pedido_segura?: string
+          status?: Database["public"]["Enums"]["status_agendamento"]
+          updated_at?: string
+          user_id?: string
+          venda_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agendamentos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agendamentos_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       certificados: {
         Row: {
           cliente: string
@@ -359,6 +410,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      status_agendamento: "Agendado" | "Realizado" | "Cancelado" | "Reagendado"
       status_certificado: "Emitido" | "Pendente" | "Cancelado"
       status_comissao: "Paga" | "Pendente"
       status_geral: "Ativo" | "Inativo"
@@ -493,6 +545,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      status_agendamento: ["Agendado", "Realizado", "Cancelado", "Reagendado"],
       status_certificado: ["Emitido", "Pendente", "Cancelado"],
       status_comissao: ["Paga", "Pendente"],
       status_geral: ["Ativo", "Inativo"],

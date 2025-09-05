@@ -155,11 +155,65 @@ Deno.serve(async (req) => {
       console.log('Using existing client:', clienteId);
     }
 
+    // Check if there's scheduling information in the status
+    let agendamentoId = null;
+    const orderStatus = n8nData.data?.orderDetails?.status;
+    
+    if (orderStatus && orderStatus.includes('Agendado')) {
+      console.log('Creating agendamento from status:', orderStatus);
+      
+      // Parse scheduling date from status string like "Agendado Dia 18/08/2025 14:00"
+      const dateMatch = orderStatus.match(/Agendado Dia (\d{2}\/\d{2}\/\d{4}) (\d{2}:\d{2})/);
+      
+      if (dateMatch) {
+        const [, dateStr, timeStr] = dateMatch;
+        const [day, month, year] = dateStr.split('/');
+        const [hour, minute] = timeStr.split(':');
+        
+        // Create Date object in local timezone
+        const agendamentoDate = new Date(
+          parseInt(year),
+          parseInt(month) - 1, // JavaScript months are 0-indexed
+          parseInt(day),
+          parseInt(hour),
+          parseInt(minute)
+        );
+        
+        console.log('Parsed agendamento date:', agendamentoDate);
+        
+        // Create agendamento record
+        const newAgendamento = {
+          venda_id: null, // Will be updated when venda is created
+          pedido_segura: id_pedido,
+          cliente_id: clienteId,
+          data_agendamento: agendamentoDate.toISOString(),
+          status: 'Agendado' as const,
+          user_id: user.id,
+        };
+        
+        const { data: createdAgendamento, error: agendamentoError } = await supabase
+          .from('agendamentos')
+          .insert([newAgendamento])
+          .select()
+          .single();
+        
+        if (agendamentoError) {
+          console.error('Error creating agendamento:', agendamentoError);
+          // Don't throw error, just log it as agendamento is not critical
+        } else {
+          agendamentoId = createdAgendamento.id;
+          console.log('Agendamento created successfully:', agendamentoId);
+        }
+      }
+    }
+
     // Return the processed data with client information
     const response = {
       success: true,
       clienteId,
       clienteExistente: !!existingClient,
+      agendamentoId,
+      agendamentoCriado: !!agendamentoId,
       ...n8nData, // Include all original n8n data
       dadosCliente: existingClient || {
         nome_razao_social: clientProfile.socialReason || clientProfile.tradeName,
