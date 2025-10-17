@@ -1,22 +1,15 @@
 
-import { useState } from "react";
 import Layout from "@/components/Layout";
 import AppNavigation from "@/components/AppNavigation";
-import Hero from "@/components/Hero";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Users, DollarSign, Award, TrendingUp, LogOut } from "lucide-react";
+import { FileText, Users, DollarSign, Award, TrendingUp } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
-  };
 
   const stats = [
     {
@@ -52,7 +45,6 @@ const Index = () => {
   return (
     <Layout>
       <AppNavigation />
-
       <div className="container mx-auto px-6 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
