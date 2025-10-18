@@ -148,10 +148,11 @@ const Vendas = () => {
         }
       };
       
-      const response = await fetch('https://n8n.rockethub.com.br/webhook/bcb1-62f6d45cf804/asaas', {
+      const response = await fetch('https://n8n.rockethub.com.br/webhook/8b4d-4b975503c913/asaas', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'api_token': 'ea04a06d-d591-426f-b8d8-0cd103ef0fb1',
         },
         body: JSON.stringify(payload),
       });
