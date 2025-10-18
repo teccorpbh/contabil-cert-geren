@@ -5,7 +5,7 @@ import AppNavigation from "@/components/AppNavigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus, Eye, Edit, Trash } from "lucide-react";
+import { FileText, Plus, Eye, Edit, Trash, Receipt } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -28,16 +28,19 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useVendas } from "@/hooks/useVendas";
+import { useClientes } from "@/hooks/useClientes";
 import VendaModal from "@/components/VendaModal";
 
 const Vendas = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { vendas, createVenda, updateVenda, deleteVenda, getVenda } = useVendas();
+  const { clientes } = useClientes();
   
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
   const [selectedVenda, setSelectedVenda] = useState<any>(null);
+  const [loadingBoleto, setLoadingBoleto] = useState<string | null>(null);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -95,6 +98,82 @@ const Vendas = () => {
         title: "Venda atualizada",
         description: "A venda foi atualizada com sucesso."
       });
+    }
+  };
+
+  const handleGerarBoleto = async (vendaId: string) => {
+    setLoadingBoleto(vendaId);
+    
+    try {
+      const venda = getVenda(vendaId);
+      if (!venda) {
+        throw new Error('Venda não encontrada');
+      }
+      
+      if (!venda.clienteId) {
+        throw new Error('Venda não possui cliente associado');
+      }
+      
+      const cliente = clientes.find(c => c.id === venda.clienteId);
+      if (!cliente) {
+        throw new Error('Cliente não encontrado');
+      }
+      
+      const payload = {
+        venda: {
+          id: venda.id,
+          pedido_segura: venda.pedidoSegura,
+          valor: parseFloat(venda.valor.replace('R$', '').replace('.', '').replace(',', '.')),
+          status: venda.status,
+          status_pagamento: venda.statusPagamento,
+          data: venda.data,
+          data_vencimento: venda.dataVencimento,
+          responsavel: venda.responsavel,
+          indicador: venda.indicador
+        },
+        cliente: {
+          id: cliente.id,
+          nome_razao_social: cliente.nome_razao_social,
+          cpf_cnpj: cliente.cpf_cnpj,
+          tipo_pessoa: cliente.tipo_pessoa,
+          email: cliente.email,
+          telefone: cliente.telefone,
+          endereco: cliente.endereco,
+          numero: cliente.numero,
+          complemento: cliente.complemento,
+          bairro: cliente.bairro,
+          cidade: cliente.cidade,
+          estado: cliente.estado,
+          cep: cliente.cep
+        }
+      };
+      
+      const response = await fetch('https://n8n.rockethub.com.br/webhook/bcb1-62f6d45cf804/asaas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Erro ao gerar boleto: ${response.statusText}`);
+      }
+      
+      toast({
+        title: "Boleto gerado com sucesso!",
+        description: `O boleto para a venda ${venda.pedidoSegura} foi gerado.`,
+      });
+      
+    } catch (error: any) {
+      console.error('Erro ao gerar boleto:', error);
+      toast({
+        title: "Erro ao gerar boleto",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingBoleto(null);
     }
   };
 
@@ -157,6 +236,15 @@ const Vendas = () => {
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => handleEdit(venda.id)}>
                         <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="secondary" 
+                        onClick={() => handleGerarBoleto(venda.id)}
+                        disabled={!venda.clienteId || loadingBoleto === venda.id}
+                        aria-label={`Gerar boleto para venda ${venda.pedidoSegura}`}
+                      >
+                        <Receipt className="h-4 w-4" />
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
