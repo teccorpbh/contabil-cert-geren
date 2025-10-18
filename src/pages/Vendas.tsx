@@ -5,7 +5,7 @@ import AppNavigation from "@/components/AppNavigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus, Eye, Edit, Trash, Receipt } from "lucide-react";
+import { FileText, Plus, Eye, Edit, Trash, Receipt, FileCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -161,9 +161,23 @@ const Vendas = () => {
         throw new Error(`Erro ao gerar boleto: ${response.statusText}`);
       }
       
+      const responseData = await response.json();
+      console.log('Boleto gerado com sucesso:', responseData);
+      
+      // Salvar URLs do boleto na venda
+      if (responseData && responseData.length > 0) {
+        const paymentData = responseData[0];
+        await updateVenda(vendaId, {
+          boletoUrl: paymentData.bankSlipUrl,
+          invoiceUrl: paymentData.invoiceUrl,
+          asaasPaymentId: paymentData.id,
+          nossoNumero: paymentData.nossoNumero
+        });
+      }
+      
       toast({
         title: "Boleto gerado com sucesso!",
-        description: `O boleto para a venda ${venda.pedidoSegura} foi gerado.`,
+        description: `O boleto para a venda ${venda.pedidoSegura} foi gerado e salvo.`,
       });
       
     } catch (error: any) {
@@ -230,7 +244,7 @@ const Vendas = () => {
                     </Badge>
                   </TableCell>
                   <TableCell>{venda.data}</TableCell>
-                  <TableCell aria-label={`Ações da venda ${venda.pedidoSegura}`}>
+                   <TableCell aria-label={`Ações da venda ${venda.pedidoSegura}`}>
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline" onClick={() => handleView(venda.id)} aria-label={`Visualizar venda ${venda.pedidoSegura}`}>
                         <Eye className="h-4 w-4" />
@@ -238,14 +252,41 @@ const Vendas = () => {
                       <Button size="sm" variant="outline" onClick={() => handleEdit(venda.id)}>
                         <Edit className="h-4 w-4" />
                       </Button>
+                      {venda.boletoUrl && (
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => window.open(venda.boletoUrl, '_blank', 'noopener,noreferrer')}
+                          aria-label={`Abrir boleto da venda ${venda.pedidoSegura}`}
+                          title="Ver Boleto"
+                        >
+                          <Receipt className="h-4 w-4 text-green-600" />
+                        </Button>
+                      )}
+                      {venda.invoiceUrl && (
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => window.open(venda.invoiceUrl, '_blank', 'noopener,noreferrer')}
+                          aria-label={`Abrir fatura da venda ${venda.pedidoSegura}`}
+                          title="Ver Fatura"
+                        >
+                          <FileCheck className="h-4 w-4 text-blue-600" />
+                        </Button>
+                      )}
                       <Button 
                         size="sm" 
                         variant="secondary" 
                         onClick={() => handleGerarBoleto(venda.id)}
                         disabled={!venda.clienteId || loadingBoleto === venda.id}
-                        aria-label={`Gerar boleto para venda ${venda.pedidoSegura}`}
+                        aria-label={venda.boletoUrl ? `Regerar boleto para venda ${venda.pedidoSegura}` : `Gerar boleto para venda ${venda.pedidoSegura}`}
+                        title={venda.boletoUrl ? "Regerar Boleto" : "Gerar Boleto"}
                       >
-                        <Receipt className="h-4 w-4" />
+                        {loadingBoleto === venda.id ? (
+                          <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                        ) : (
+                          <FileText className="h-4 w-4" />
+                        )}
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>

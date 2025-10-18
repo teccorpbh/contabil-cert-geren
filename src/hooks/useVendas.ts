@@ -18,6 +18,10 @@ export interface Venda {
   statusPagamento: 'Pendente' | 'Pago' | 'Vencido';
   data: string;
   dataVencimento?: string;
+  boletoUrl?: string;
+  invoiceUrl?: string;
+  asaasPaymentId?: string;
+  nossoNumero?: string;
 }
 
 export const useVendas = () => {
@@ -59,7 +63,11 @@ export const useVendas = () => {
         status: item.status,
         statusPagamento: item.status_pagamento,
         data: new Date(item.data).toLocaleDateString('pt-BR'),
-        dataVencimento: item.data_vencimento ? new Date(item.data_vencimento).toLocaleDateString('pt-BR') : undefined
+        dataVencimento: item.data_vencimento ? new Date(item.data_vencimento).toLocaleDateString('pt-BR') : undefined,
+        boletoUrl: item.boleto_url,
+        invoiceUrl: item.invoice_url,
+        asaasPaymentId: item.asaas_payment_id,
+        nossoNumero: item.nosso_numero
       }));
 
       setVendas(mappedVendas);
@@ -189,6 +197,10 @@ export const useVendas = () => {
       if (updatedVenda.dataVencimento !== undefined) {
         updateData.data_vencimento = updatedVenda.dataVencimento ? new Date(updatedVenda.dataVencimento).toISOString() : null;
       }
+      if (updatedVenda.boletoUrl !== undefined) updateData.boleto_url = updatedVenda.boletoUrl;
+      if (updatedVenda.invoiceUrl !== undefined) updateData.invoice_url = updatedVenda.invoiceUrl;
+      if (updatedVenda.asaasPaymentId !== undefined) updateData.asaas_payment_id = updatedVenda.asaasPaymentId;
+      if (updatedVenda.nossoNumero !== undefined) updateData.nosso_numero = updatedVenda.nossoNumero;
 
       const { error } = await supabase
         .from('vendas')

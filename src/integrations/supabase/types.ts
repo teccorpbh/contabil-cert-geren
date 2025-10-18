@@ -289,6 +289,8 @@ export type Database = {
       }
       vendas: {
         Row: {
+          asaas_payment_id: string | null
+          boleto_url: string | null
           cliente: string
           cliente_id: string | null
           created_at: string
@@ -296,6 +298,8 @@ export type Database = {
           data_vencimento: string | null
           id: string
           indicador_id: string | null
+          invoice_url: string | null
+          nosso_numero: string | null
           pedido_segura: string
           responsavel: string
           status: Database["public"]["Enums"]["status_venda"]
@@ -306,6 +310,8 @@ export type Database = {
           vendedor_id: string | null
         }
         Insert: {
+          asaas_payment_id?: string | null
+          boleto_url?: string | null
           cliente: string
           cliente_id?: string | null
           created_at?: string
@@ -313,6 +319,8 @@ export type Database = {
           data_vencimento?: string | null
           id?: string
           indicador_id?: string | null
+          invoice_url?: string | null
+          nosso_numero?: string | null
           pedido_segura: string
           responsavel: string
           status?: Database["public"]["Enums"]["status_venda"]
@@ -323,6 +331,8 @@ export type Database = {
           vendedor_id?: string | null
         }
         Update: {
+          asaas_payment_id?: string | null
+          boleto_url?: string | null
           cliente?: string
           cliente_id?: string | null
           created_at?: string
@@ -330,6 +340,8 @@ export type Database = {
           data_vencimento?: string | null
           id?: string
           indicador_id?: string | null
+          invoice_url?: string | null
+          nosso_numero?: string | null
           pedido_segura?: string
           responsavel?: string
           status?: Database["public"]["Enums"]["status_venda"]
