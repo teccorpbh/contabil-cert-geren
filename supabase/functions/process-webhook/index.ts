@@ -71,12 +71,13 @@ Deno.serve(async (req) => {
     console.log('Fetching order data from n8n webhook...');
     
     // Call n8n webhook to get order data
-    const webhookUrl = "https://n8n.rockethub.com.br/webhook/ea04a06d-d591-426f-b8d8-0cd103ef0fb1";
+    const webhookUrl = "https://n8n.rockethub.com.br/webhook/b8d8-0cd103ef0fb1/segura";
     
     const n8nResponse = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'api_token': 'Z6tDbRPCXdljVLCLsaGh0yiVbwEYCiNT',
       },
       body: JSON.stringify({
         id_pedido: id_pedido
