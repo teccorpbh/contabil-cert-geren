@@ -160,12 +160,12 @@ const Vendas = () => {
       const responseData = await response.json();
       console.log('Resposta completa da API:', responseData);
 
-      if (!responseData || !Array.isArray(responseData) || responseData.length === 0) {
+      // A API retorna um objeto (não array) com status e return
+      if (!responseData || typeof responseData !== 'object') {
         throw new Error('Resposta da API inválida ou vazia');
       }
 
-      // A API retorna um array com objeto contendo status e return
-      const apiResponse = responseData[0];
+      const apiResponse = responseData; // Acessa diretamente, não usa [0]
 
       // Verificar se o status é success
       if (!apiResponse || apiResponse.status !== 'success') {
