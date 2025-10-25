@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Layout from "@/components/Layout";
 import AppNavigation from "@/components/AppNavigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus, Eye, Edit, Trash, Receipt, FileCheck } from "lucide-react";
+import { FileText, Eye, Edit, Trash, Receipt, FileCheck, Search, ArrowUpDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -13,6 +13,9 @@ import { useVendas } from "@/hooks/useVendas";
 import { useClientes } from "@/hooks/useClientes";
 import VendaModal from "@/components/VendaModal";
 import { addDays, format } from "date-fns";
+import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 const Vendas = () => {
   const navigate = useNavigate();
   const {
@@ -32,6 +35,9 @@ const Vendas = () => {
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
   const [selectedVenda, setSelectedVenda] = useState<any>(null);
   const [loadingBoleto, setLoadingBoleto] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortField, setSortField] = useState<'pedidoSegura' | 'cliente' | 'valor' | 'data'>('data');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Emitido":
@@ -77,6 +83,47 @@ const Vendas = () => {
       description: "A venda foi excluída com sucesso."
     });
   };
+  const handleSort = (field: 'pedidoSegura' | 'cliente' | 'valor' | 'data') => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const filteredAndSortedVendas = useMemo(() => {
+    let filtered = vendas.filter(venda => {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        venda.pedidoSegura.toLowerCase().includes(searchLower) ||
+        venda.cliente.toLowerCase().includes(searchLower) ||
+        venda.responsavel.toLowerCase().includes(searchLower) ||
+        venda.indicador?.toLowerCase().includes(searchLower) ||
+        venda.status.toLowerCase().includes(searchLower)
+      );
+    });
+
+    return filtered.sort((a, b) => {
+      let aValue: any = a[sortField];
+      let bValue: any = b[sortField];
+
+      if (sortField === 'valor') {
+        aValue = parseFloat(aValue.replace('R$', '').replace('.', '').replace(',', '.'));
+        bValue = parseFloat(bValue.replace('R$', '').replace('.', '').replace(',', '.'));
+      }
+
+      if (sortField === 'data') {
+        aValue = new Date(aValue);
+        bValue = new Date(bValue);
+      }
+
+      if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [vendas, searchTerm, sortField, sortOrder]);
+
   const handleSave = (vendaData: any) => {
     if (modalMode === 'create') {
       createVenda(vendaData);
@@ -195,11 +242,6 @@ const Vendas = () => {
         description: `Boleto para a venda ${venda.pedidoSegura} foi gerado. Nosso Número: ${paymentData.nossoNumero}`,
         duration: 5000,
       });
-
-      // Abrir o boleto em nova aba automaticamente
-      if (paymentData.bankSlipUrl) {
-        window.open(paymentData.bankSlipUrl, '_blank', 'noopener,noreferrer');
-      }
     } catch (error: any) {
       console.error('Erro ao gerar boleto:', error);
 
@@ -237,24 +279,52 @@ const Vendas = () => {
         </div>
 
         <Card className="p-6">
+          <div className="mb-4 flex items-center gap-2">
+            <Search className="h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por pedido, cliente, responsável, indicador ou status..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-md"
+            />
+          </div>
+          
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Pedido Segura</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Valor</TableHead>
+                <TableHead>
+                  <Button variant="ghost" size="sm" onClick={() => handleSort('pedidoSegura')} className="h-8 px-2">
+                    Pedido Segura
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </TableHead>
+                <TableHead>
+                  <Button variant="ghost" size="sm" onClick={() => handleSort('cliente')} className="h-8 px-2">
+                    Cliente
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </TableHead>
+                <TableHead>
+                  <Button variant="ghost" size="sm" onClick={() => handleSort('valor')} className="h-8 px-2">
+                    Valor
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </TableHead>
                 <TableHead>Responsável</TableHead>
                 <TableHead>Indicador</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Pagamento</TableHead>
-                <TableHead>Data</TableHead>
+                <TableHead>
+                  <Button variant="ghost" size="sm" onClick={() => handleSort('data')} className="h-8 px-2">
+                    Data
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {vendas.map(venda => <TableRow key={venda.id}>
-                  <TableCell className="font-medium">{venda.id}</TableCell>
+              {filteredAndSortedVendas.map(venda => <TableRow key={venda.id}>
                   <TableCell>{venda.pedidoSegura}</TableCell>
                   <TableCell>{venda.cliente}</TableCell>
                   <TableCell>{venda.valor}</TableCell>
@@ -272,28 +342,68 @@ const Vendas = () => {
                   </TableCell>
                   <TableCell>{venda.data}</TableCell>
                    <TableCell aria-label={`Ações da venda ${venda.pedidoSegura}`}>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => handleView(venda.id)} aria-label={`Visualizar venda ${venda.pedidoSegura}`}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(venda.id)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      {venda.boletoUrl && <Button size="sm" variant="outline" onClick={() => window.open(venda.boletoUrl, '_blank', 'noopener,noreferrer')} aria-label={`Abrir boleto da venda ${venda.pedidoSegura}`} title="Ver Boleto">
-                          <Receipt className="h-4 w-4 text-green-600" />
-                        </Button>}
-                      {venda.invoiceUrl && <Button size="sm" variant="outline" onClick={() => window.open(venda.invoiceUrl, '_blank', 'noopener,noreferrer')} aria-label={`Abrir fatura da venda ${venda.pedidoSegura}`} title="Ver Fatura">
-                          <FileCheck className="h-4 w-4 text-blue-600" />
-                        </Button>}
-                      <Button size="sm" variant="secondary" onClick={() => handleGerarBoleto(venda.id)} disabled={!venda.clienteId || loadingBoleto === venda.id} aria-label={venda.boletoUrl ? `Regerar boleto para venda ${venda.pedidoSegura}` : `Gerar boleto para venda ${venda.pedidoSegura}`} title={venda.boletoUrl ? "Regerar Boleto" : "Gerar Boleto"}>
-                        {loadingBoleto === venda.id ? <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" /> : <FileText className="h-4 w-4" />}
-                      </Button>
+                    <TooltipProvider>
+                      <div className="flex gap-2">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button size="sm" variant="outline" onClick={() => handleView(venda.id)} aria-label={`Visualizar venda ${venda.pedidoSegura}`}>
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Visualizar detalhes</TooltipContent>
+                        </Tooltip>
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button size="sm" variant="outline" onClick={() => handleEdit(venda.id)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Editar venda</TooltipContent>
+                        </Tooltip>
+                        
+                        {venda.boletoUrl && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button size="sm" variant="outline" onClick={() => window.open(venda.boletoUrl, '_blank', 'noopener,noreferrer')} aria-label={`Abrir boleto da venda ${venda.pedidoSegura}`}>
+                                <Receipt className="h-4 w-4 text-green-600" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Ver boleto</TooltipContent>
+                          </Tooltip>
+                        )}
+                        
+                        {venda.invoiceUrl && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button size="sm" variant="outline" onClick={() => window.open(venda.invoiceUrl, '_blank', 'noopener,noreferrer')} aria-label={`Abrir fatura da venda ${venda.pedidoSegura}`}>
+                                <FileCheck className="h-4 w-4 text-blue-600" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Ver fatura</TooltipContent>
+                          </Tooltip>
+                        )}
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button size="sm" variant="secondary" onClick={() => handleGerarBoleto(venda.id)} disabled={!venda.clienteId || loadingBoleto === venda.id} aria-label={venda.boletoUrl ? `Regerar boleto para venda ${venda.pedidoSegura}` : `Gerar boleto para venda ${venda.pedidoSegura}`}>
+                              {loadingBoleto === venda.id ? <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" /> : <FileText className="h-4 w-4" />}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>{venda.boletoUrl ? "Regerar boleto" : "Gerar boleto"}</TooltipContent>
+                        </Tooltip>
+                        
                       <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="outline" aria-label={`Excluir venda ${venda.pedidoSegura}`}>
-                            <Trash className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="outline" aria-label={`Excluir venda ${venda.pedidoSegura}`}>
+                                <Trash className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                          </TooltipTrigger>
+                          <TooltipContent>Excluir venda</TooltipContent>
+                        </Tooltip>
                         <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
@@ -309,7 +419,8 @@ const Vendas = () => {
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
-                    </div>
+                      </div>
+                    </TooltipProvider>
                   </TableCell>
                 </TableRow>)}
             </TableBody>
