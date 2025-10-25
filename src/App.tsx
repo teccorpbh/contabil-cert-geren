@@ -18,6 +18,7 @@ import Certificados from "./pages/Certificados";
 import Indicadores from "./pages/Indicadores";
 import Comissoes from "./pages/Comissoes";
 import Relatorios from "./pages/Relatorios";
+import ContasAPagar from "./pages/ContasAPagar";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -84,6 +85,11 @@ const App = () => (
             <Route path="/relatorios" element={
               <ProtectedRoute>
                 <Relatorios />
+              </ProtectedRoute>
+            } />
+            <Route path="/contas-a-pagar" element={
+              <ProtectedRoute>
+                <ContasAPagar />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

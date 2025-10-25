@@ -13,6 +13,7 @@ export interface Certificado {
   status: 'Emitido' | 'Pendente' | 'Cancelado';
   diasVencimento: number;
   vendaId: string;
+  precoCusto?: number;
 }
 
 export const useCertificados = () => {
@@ -41,7 +42,8 @@ export const useCertificados = () => {
         validade: new Date(item.validade).toLocaleDateString('pt-BR'),
         status: item.status,
         diasVencimento: item.dias_vencimento || 0,
-        vendaId: item.venda_id
+        vendaId: item.venda_id,
+        precoCusto: item.preco_custo
       }));
 
       setCertificados(mappedCertificados);

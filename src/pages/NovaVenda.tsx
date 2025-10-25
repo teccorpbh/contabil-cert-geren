@@ -290,26 +290,32 @@ const NovaVenda = () => {
         }
       }
 
-      // PASSO 4: Criar Certificado (se status = "Concluído")
-      if (orderStatus === 'Concluído') {
-        const productName = pedidoData?.data?.productData?.productNameSelected || '';
-        const tipoCertificado = productName.match(/A[13]/i)?.[0]?.toUpperCase() || 'A1';
-        
-        const validity = pedidoData?.data?.productData?.validity || '1 ano';
-        const anos = parseInt(validity) || 1;
-        const validade = new Date();
-        validade.setFullYear(validade.getFullYear() + anos);
-        
-        await supabase.from('certificados').insert([{
-          tipo: tipoCertificado,
-          documento: pedidoSegura,
-          cliente: nomeCliente,
-          validade: validade.toISOString().split('T')[0],
-          status: 'Emitido',
-          venda_id: vendaCriada.id,
-          user_id: user.id
-        }]);
-      }
+        // PASSO 4: Criar Certificado (se status = "Concluído")
+        if (orderStatus === 'Concluído') {
+          const productName = pedidoData?.data?.productData?.productNameSelected || '';
+          const tipoCertificado = productName.match(/A[13]/i)?.[0]?.toUpperCase() || 'A1';
+          
+          const validity = pedidoData?.data?.productData?.validity || '1 ano';
+          const anos = parseInt(validity) || 1;
+          const validade = new Date();
+          validade.setFullYear(validade.getFullYear() + anos);
+          
+          // Extrair preço de custo do productData
+          const precoCustoValue = pedidoData?.data?.productData?.value 
+            ? parseFloat(pedidoData.data.productData.value.replace(',', '.'))
+            : null;
+          
+          await supabase.from('certificados').insert([{
+            tipo: tipoCertificado,
+            documento: pedidoSegura,
+            cliente: nomeCliente,
+            validade: validade.toISOString().split('T')[0],
+            status: 'Emitido',
+            venda_id: vendaCriada.id,
+            preco_custo: precoCustoValue,
+            user_id: user.id
+          }]);
+        }
 
       toast({
         title: "Sucesso",

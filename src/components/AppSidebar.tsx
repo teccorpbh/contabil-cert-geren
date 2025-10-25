@@ -8,6 +8,7 @@ import {
   Target, 
   DollarSign, 
   FileText,
+  Receipt,
   LogOut,
   ChevronRight
 } from "lucide-react";
@@ -40,6 +41,12 @@ const menuItems = [
     items: [
       { title: "Vendas", url: "/vendas", icon: ShoppingCart },
       { title: "Comissões", url: "/comissoes", icon: DollarSign },
+    ]
+  },
+  {
+    group: "Financeiro",
+    items: [
+      { title: "Contas a Pagar", url: "/contas-a-pagar", icon: Receipt },
     ]
   },
   {

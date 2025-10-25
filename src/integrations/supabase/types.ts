@@ -72,6 +72,7 @@ export type Database = {
           dias_vencimento: number | null
           documento: string
           id: string
+          preco_custo: number | null
           status: Database["public"]["Enums"]["status_certificado"]
           tipo: string
           updated_at: string
@@ -85,6 +86,7 @@ export type Database = {
           dias_vencimento?: number | null
           documento: string
           id?: string
+          preco_custo?: number | null
           status?: Database["public"]["Enums"]["status_certificado"]
           tipo: string
           updated_at?: string
@@ -98,6 +100,7 @@ export type Database = {
           dias_vencimento?: number | null
           documento?: string
           id?: string
+          preco_custo?: number | null
           status?: Database["public"]["Enums"]["status_certificado"]
           tipo?: string
           updated_at?: string
@@ -244,6 +247,75 @@ export type Database = {
             columns: ["vendedor_id"]
             isOneToOne: false
             referencedRelation: "vendedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contas_a_pagar: {
+        Row: {
+          certificado_id: string | null
+          created_at: string
+          data_emissao: string
+          data_pagamento: string | null
+          data_vencimento: string
+          descricao: string
+          fornecedor: string
+          id: string
+          observacoes: string | null
+          status: Database["public"]["Enums"]["status_conta_pagar"]
+          tipo: Database["public"]["Enums"]["tipo_conta"]
+          updated_at: string
+          user_id: string
+          valor: number
+          venda_id: string | null
+        }
+        Insert: {
+          certificado_id?: string | null
+          created_at?: string
+          data_emissao?: string
+          data_pagamento?: string | null
+          data_vencimento: string
+          descricao: string
+          fornecedor: string
+          id?: string
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["status_conta_pagar"]
+          tipo?: Database["public"]["Enums"]["tipo_conta"]
+          updated_at?: string
+          user_id: string
+          valor: number
+          venda_id?: string | null
+        }
+        Update: {
+          certificado_id?: string | null
+          created_at?: string
+          data_emissao?: string
+          data_pagamento?: string | null
+          data_vencimento?: string
+          descricao?: string
+          fornecedor?: string
+          id?: string
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["status_conta_pagar"]
+          tipo?: Database["public"]["Enums"]["tipo_conta"]
+          updated_at?: string
+          user_id?: string
+          valor?: number
+          venda_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contas_a_pagar_certificado_id_fkey"
+            columns: ["certificado_id"]
+            isOneToOne: false
+            referencedRelation: "certificados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_a_pagar_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "vendas"
             referencedColumns: ["id"]
           },
         ]
@@ -425,10 +497,16 @@ export type Database = {
       status_agendamento: "Agendado" | "Realizado" | "Cancelado" | "Reagendado"
       status_certificado: "Emitido" | "Pendente" | "Cancelado"
       status_comissao: "Paga" | "Pendente"
+      status_conta_pagar: "Pendente" | "Pago" | "Vencido" | "Cancelado"
       status_geral: "Ativo" | "Inativo"
       status_indicador: "Ativo" | "Inativo"
       status_pagamento: "Pendente" | "Pago" | "Vencido"
       status_venda: "Pendente" | "Emitido" | "Cancelado"
+      tipo_conta:
+        | "Certificado"
+        | "Fornecedor"
+        | "Despesa Operacional"
+        | "Outros"
       tipo_pessoa: "PF" | "PJ"
     }
     CompositeTypes: {
@@ -560,10 +638,17 @@ export const Constants = {
       status_agendamento: ["Agendado", "Realizado", "Cancelado", "Reagendado"],
       status_certificado: ["Emitido", "Pendente", "Cancelado"],
       status_comissao: ["Paga", "Pendente"],
+      status_conta_pagar: ["Pendente", "Pago", "Vencido", "Cancelado"],
       status_geral: ["Ativo", "Inativo"],
       status_indicador: ["Ativo", "Inativo"],
       status_pagamento: ["Pendente", "Pago", "Vencido"],
       status_venda: ["Pendente", "Emitido", "Cancelado"],
+      tipo_conta: [
+        "Certificado",
+        "Fornecedor",
+        "Despesa Operacional",
+        "Outros",
+      ],
       tipo_pessoa: ["PF", "PJ"],
     },
   },
