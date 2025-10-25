@@ -9,6 +9,9 @@ interface PedidoData {
   orderId: string;
   productDetails: any;
   clientProfile: {
+    type?: string;
+    name?: string;
+    surname?: string;
     socialReason?: string;
     tradeName?: string;
     cpf?: string;
@@ -120,8 +123,20 @@ Deno.serve(async (req) => {
     if (!existingClient) {
       console.log('Creating new client...');
       
+      // Determinar o nome baseado no tipo de pessoa
+      let nomeCliente: string;
+      if (clientProfile.type === 'PF' || clientProfile.cpf) {
+        // Para Pessoa Física, concatenar name e surname
+        const firstName = clientProfile.name?.trim() || '';
+        const lastName = clientProfile.surname?.trim() || '';
+        nomeCliente = `${firstName} ${lastName}`.trim() || 'Cliente Não Identificado';
+      } else {
+        // Para Pessoa Jurídica, usar razão social ou nome fantasia
+        nomeCliente = clientProfile.socialReason || clientProfile.tradeName || 'Cliente Não Identificado';
+      }
+      
       const newClient = {
-        nome_razao_social: clientProfile.socialReason || clientProfile.tradeName || 'Cliente Não Identificado',
+        nome_razao_social: nomeCliente,
         cpf_cnpj: cpfCnpj,
         tipo_pessoa: clientProfile.cpf ? 'PF' as const : 'PJ' as const,
         email: clientProfile.email,
@@ -217,7 +232,9 @@ Deno.serve(async (req) => {
       agendamentoCriado: !!agendamentoId,
       ...n8nData, // Include all original n8n data
       dadosCliente: existingClient || {
-        nome_razao_social: clientProfile.socialReason || clientProfile.tradeName,
+        nome_razao_social: clientProfile.type === 'PF' || clientProfile.cpf
+          ? `${clientProfile.name?.trim() || ''} ${clientProfile.surname?.trim() || ''}`.trim() || 'Cliente Não Identificado'
+          : clientProfile.socialReason || clientProfile.tradeName || 'Cliente Não Identificado',
         cpf_cnpj: cpfCnpj,
         tipo_pessoa: clientProfile.cpf ? 'PF' : 'PJ',
         email: clientProfile.email,

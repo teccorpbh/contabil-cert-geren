@@ -37,6 +37,8 @@ interface PedidoData {
     };
     clientProfile: {
       type: string;
+      name?: string;
+      surname?: string;
       cnpj?: string;
       cpf?: string;
       socialReason?: string;
@@ -83,6 +85,7 @@ interface PedidoData {
 const NovaVenda = () => {
   const [pedidoSegura, setPedidoSegura] = useState("");
   const [valorVenda, setValorVenda] = useState("");
+  const [precoCusto, setPrecoCusto] = useState("");
   const [responsavel, setResponsavel] = useState("");
   const [indicador, setIndicador] = useState("");
   const [pedidoData, setPedidoData] = useState<PedidoData | null>(null);
@@ -142,9 +145,9 @@ const NovaVenda = () => {
       setPedidoData(data);
       setClienteId(data.clienteId);
       
-      // Preencher automaticamente o valor da venda
+      // Armazenar o preço de custo como referência (não preencher o valor de venda)
       if (data.data?.productData?.value) {
-        setValorVenda(data.data.productData.value);
+        setPrecoCusto(data.data.productData.value);
       }
 
       toast({
@@ -192,9 +195,11 @@ const NovaVenda = () => {
       const indicadorSelecionado = indicador ? indicadores.find(i => i.id === indicador) : null;
 
       // Nome do cliente (da busca ou manual)
-      const nomeCliente = pedidoData?.data?.clientProfile?.socialReason || 
-                         pedidoData?.data?.clientProfile?.tradeName || 
-                         "Cliente não identificado";
+      const nomeCliente = pedidoData?.data?.clientProfile?.type === 'PF' || pedidoData?.data?.clientProfile?.cpf
+        ? `${pedidoData?.data?.clientProfile?.name?.trim() || ''} ${pedidoData?.data?.clientProfile?.surname?.trim() || ''}`.trim() || 'Cliente não identificado'
+        : pedidoData?.data?.clientProfile?.socialReason || 
+          pedidoData?.data?.clientProfile?.tradeName || 
+          "Cliente não identificado";
 
       // Preparar dados da venda
       const vendaData = {
@@ -265,6 +270,22 @@ const NovaVenda = () => {
                   Insira o número do pedido para buscar automaticamente os dados na Segura Online
                 </p>
               </div>
+
+              {/* Preço de Custo (Referência) */}
+              {precoCusto && (
+                <div className="space-y-2">
+                  <Label htmlFor="custo">Preço de Custo (Referência)</Label>
+                  <Input
+                    id="custo"
+                    value={precoCusto}
+                    disabled
+                    className="bg-slate-50"
+                  />
+                  <p className="text-sm text-slate-500">
+                    Este é o preço de custo. Informe o preço de venda no campo abaixo.
+                  </p>
+                </div>
+              )}
 
               {/* Valor da Venda */}
               <div className="space-y-2">
@@ -372,13 +393,20 @@ const NovaVenda = () => {
                      Informações do Cliente
                    </h3>
                    <div className="grid grid-cols-2 gap-4">
-                     <div className="space-y-2">
-                       <Label>Cliente</Label>
-                       <Input 
-                         value={pedidoData.data?.clientProfile?.socialReason || pedidoData.data?.clientProfile?.tradeName || ""} 
-                         disabled 
-                       />
-                     </div>
+                      <div className="space-y-2">
+                        <Label>Cliente</Label>
+                        <Input 
+                          value={
+                            pedidoData.data?.clientProfile?.type === 'PF' || pedidoData.data?.clientProfile?.cpf
+                              ? `${pedidoData.data?.clientProfile?.name?.trim() || ''} ${pedidoData.data?.clientProfile?.surname?.trim() || ''}`.trim() || 'Cliente não identificado'
+                              : pedidoData.data?.clientProfile?.socialReason || 
+                                pedidoData.data?.clientProfile?.tradeName || 
+                                'Cliente não identificado'
+                          }
+                          disabled 
+                          className="bg-slate-50"
+                        />
+                      </div>
                      <div className="space-y-2">
                        <Label>Status do Pagamento</Label>
                        <Input 
