@@ -10,6 +10,7 @@ export interface Venda {
   cliente: string;
   clienteId?: string;
   valor: string;
+  custo?: string;
   responsavel: string;
   vendedorId?: string;
   indicador: string;
@@ -56,6 +57,7 @@ export const useVendas = () => {
         cliente: item.cliente,
         clienteId: item.cliente_id,
         valor: `R$ ${Number(item.valor).toFixed(2).replace('.', ',')}`,
+        custo: item.custo ? `R$ ${Number(item.custo).toFixed(2).replace('.', ',')}` : undefined,
         responsavel: item.vendedores?.nome || item.responsavel,
         vendedorId: item.vendedor_id,
         indicador: item.indicadores?.nome || '-',
@@ -133,11 +135,14 @@ export const useVendas = () => {
         console.log('Indicador validado:', indicadorExists.id);
       }
       
+      const custoNumerico = venda.custo ? parseFloat(venda.custo.replace('R$', '').replace(',', '.').trim()) : 0;
+      
       const vendaData = {
         pedido_segura: venda.pedidoSegura,
         cliente: venda.cliente,
         cliente_id: venda.clienteId || null,
         valor: valorNumerico,
+        custo: custoNumerico,
         responsavel: venda.responsavel,
         vendedor_id: venda.vendedorId || null,
         indicador_id: venda.indicadorId || null,
@@ -188,6 +193,10 @@ export const useVendas = () => {
       if (updatedVenda.valor) {
         const valorNumerico = parseFloat(updatedVenda.valor.replace('R$', '').replace(',', '.').trim());
         updateData.valor = valorNumerico;
+      }
+      if (updatedVenda.custo !== undefined) {
+        const custoNumerico = updatedVenda.custo ? parseFloat(updatedVenda.custo.replace('R$', '').replace(',', '.').trim()) : 0;
+        updateData.custo = custoNumerico;
       }
       if (updatedVenda.responsavel) updateData.responsavel = updatedVenda.responsavel;
       if (updatedVenda.vendedorId !== undefined) updateData.vendedor_id = updatedVenda.vendedorId || null;

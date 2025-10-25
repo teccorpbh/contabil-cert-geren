@@ -243,6 +243,8 @@ const NovaVenda = () => {
         ? `${clientProfile?.name?.trim() || ''} ${clientProfile?.surname?.trim() || ''}`.trim() || 'Cliente não identificado'
         : clientProfile?.socialReason || clientProfile?.tradeName || "Cliente não identificado";
 
+      const custoNumerico = precoCusto ? parseFloat(precoCusto.replace(',', '.')) : 0;
+      
       const { data: vendaCriada, error: vendaError } = await supabase
         .from('vendas')
         .insert([{
@@ -250,6 +252,7 @@ const NovaVenda = () => {
           cliente: nomeCliente,
           cliente_id: finalClienteId,
           valor: parseFloat(valorVenda.replace(',', '.')),
+          custo: custoNumerico,
           responsavel: vendedorSelecionado?.nome || responsavel,
           vendedor_id: responsavel,
           indicador_id: indicador && indicador !== "none" ? indicador : null,

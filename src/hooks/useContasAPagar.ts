@@ -7,7 +7,7 @@ export interface ContaPagar {
   id: string;
   descricao: string;
   valor: number;
-  tipo: 'Certificado' | 'Fornecedor' | 'Despesa Operacional' | 'Outros';
+  tipo: 'Certificado' | 'Comissao' | 'Fornecedor' | 'Despesa Operacional' | 'Outros';
   fornecedor: string;
   dataEmissao: string;
   dataVencimento: string;
@@ -15,6 +15,7 @@ export interface ContaPagar {
   status: 'Pendente' | 'Pago' | 'Vencido' | 'Cancelado';
   certificadoId: string | null;
   vendaId: string | null;
+  comissaoId: string | null;
   observacoes: string | null;
 }
 
@@ -48,6 +49,7 @@ export const useContasAPagar = () => {
         status: item.status,
         certificadoId: item.certificado_id,
         vendaId: item.venda_id,
+        comissaoId: item.comissao_id,
         observacoes: item.observacoes
       }));
 
@@ -115,6 +117,7 @@ export const useContasAPagar = () => {
           status: conta.status,
           certificado_id: conta.certificadoId,
           venda_id: conta.vendaId,
+          comissao_id: conta.comissaoId,
           observacoes: conta.observacoes,
           user_id: user.id
         });

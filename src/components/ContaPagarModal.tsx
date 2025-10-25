@@ -27,6 +27,7 @@ export const ContaPagarModal = ({ isOpen, onClose, onSave, conta, mode }: ContaP
     status: 'Pendente',
     certificadoId: null,
     vendaId: null,
+    comissaoId: null,
     observacoes: null
   });
 
@@ -43,6 +44,7 @@ export const ContaPagarModal = ({ isOpen, onClose, onSave, conta, mode }: ContaP
         status: conta.status,
         certificadoId: conta.certificadoId,
         vendaId: conta.vendaId,
+        comissaoId: conta.comissaoId,
         observacoes: conta.observacoes
       });
     } else if (mode === 'create') {
@@ -57,6 +59,7 @@ export const ContaPagarModal = ({ isOpen, onClose, onSave, conta, mode }: ContaP
         status: 'Pendente',
         certificadoId: null,
         vendaId: null,
+        comissaoId: null,
         observacoes: null
       });
     }
@@ -116,6 +119,7 @@ export const ContaPagarModal = ({ isOpen, onClose, onSave, conta, mode }: ContaP
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Certificado">Certificado</SelectItem>
+                  <SelectItem value="Comissao">Comissão</SelectItem>
                   <SelectItem value="Fornecedor">Fornecedor</SelectItem>
                   <SelectItem value="Despesa Operacional">Despesa Operacional</SelectItem>
                   <SelectItem value="Outros">Outros</SelectItem>
@@ -187,6 +191,17 @@ export const ContaPagarModal = ({ isOpen, onClose, onSave, conta, mode }: ContaP
                 disabled={isReadOnly}
                 placeholder="DD/MM/AAAA"
               />
+            </div>
+          )}
+
+          {formData.comissaoId && (
+            <div className="grid gap-2 p-4 bg-orange-50 border border-orange-200 rounded">
+              <p className="text-sm text-orange-900 font-semibold">
+                ⚠️ Conta relacionada a comissão
+              </p>
+              <p className="text-xs text-orange-800">
+                Ao pagar esta conta, a comissão relacionada será automaticamente marcada como paga.
+              </p>
             </div>
           )}
 

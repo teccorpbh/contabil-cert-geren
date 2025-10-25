@@ -25,6 +25,7 @@ const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) =
     pedidoSegura: '',
     cliente: '',
     valor: '',
+    custo: '',
     responsavel: '',
     vendedorId: '',
     indicador: '',
@@ -41,6 +42,7 @@ const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) =
         pedidoSegura: venda.pedidoSegura,
         cliente: venda.cliente,
         valor: venda.valor,
+        custo: venda.custo || '',
         responsavel: venda.responsavel,
         vendedorId: venda.vendedorId || '',
         indicador: venda.indicador,
@@ -55,6 +57,7 @@ const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) =
         pedidoSegura: '',
         cliente: '',
         valor: '',
+        custo: '',
         responsavel: '',
         vendedorId: '',
         indicador: '',
@@ -118,6 +121,16 @@ const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) =
             <Input
               value={formData.valor}
               onChange={(e) => setFormData({...formData, valor: e.target.value})}
+              disabled={isReadOnly}
+              placeholder="R$ 0,00"
+            />
+          </div>
+
+          <div>
+            <Label>Custo</Label>
+            <Input
+              value={formData.custo}
+              onChange={(e) => setFormData({...formData, custo: e.target.value})}
               disabled={isReadOnly}
               placeholder="R$ 0,00"
             />

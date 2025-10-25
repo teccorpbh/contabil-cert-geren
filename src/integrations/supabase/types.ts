@@ -254,6 +254,7 @@ export type Database = {
       contas_a_pagar: {
         Row: {
           certificado_id: string | null
+          comissao_id: string | null
           created_at: string
           data_emissao: string
           data_pagamento: string | null
@@ -271,6 +272,7 @@ export type Database = {
         }
         Insert: {
           certificado_id?: string | null
+          comissao_id?: string | null
           created_at?: string
           data_emissao?: string
           data_pagamento?: string | null
@@ -288,6 +290,7 @@ export type Database = {
         }
         Update: {
           certificado_id?: string | null
+          comissao_id?: string | null
           created_at?: string
           data_emissao?: string
           data_pagamento?: string | null
@@ -309,6 +312,13 @@ export type Database = {
             columns: ["certificado_id"]
             isOneToOne: false
             referencedRelation: "certificados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_a_pagar_comissao_id_fkey"
+            columns: ["comissao_id"]
+            isOneToOne: false
+            referencedRelation: "comissoes"
             referencedColumns: ["id"]
           },
           {
@@ -366,6 +376,7 @@ export type Database = {
           cliente: string
           cliente_id: string | null
           created_at: string
+          custo: number | null
           data: string
           data_vencimento: string | null
           id: string
@@ -387,6 +398,7 @@ export type Database = {
           cliente: string
           cliente_id?: string | null
           created_at?: string
+          custo?: number | null
           data?: string
           data_vencimento?: string | null
           id?: string
@@ -408,6 +420,7 @@ export type Database = {
           cliente?: string
           cliente_id?: string | null
           created_at?: string
+          custo?: number | null
           data?: string
           data_vencimento?: string | null
           id?: string
@@ -496,7 +509,7 @@ export type Database = {
     Enums: {
       status_agendamento: "Agendado" | "Realizado" | "Cancelado" | "Reagendado"
       status_certificado: "Emitido" | "Pendente" | "Cancelado"
-      status_comissao: "Paga" | "Pendente"
+      status_comissao: "Paga" | "Pendente" | "A Receber"
       status_conta_pagar: "Pendente" | "Pago" | "Vencido" | "Cancelado"
       status_geral: "Ativo" | "Inativo"
       status_indicador: "Ativo" | "Inativo"
@@ -507,6 +520,7 @@ export type Database = {
         | "Fornecedor"
         | "Despesa Operacional"
         | "Outros"
+        | "Comissao"
       tipo_pessoa: "PF" | "PJ"
     }
     CompositeTypes: {
@@ -637,7 +651,7 @@ export const Constants = {
     Enums: {
       status_agendamento: ["Agendado", "Realizado", "Cancelado", "Reagendado"],
       status_certificado: ["Emitido", "Pendente", "Cancelado"],
-      status_comissao: ["Paga", "Pendente"],
+      status_comissao: ["Paga", "Pendente", "A Receber"],
       status_conta_pagar: ["Pendente", "Pago", "Vencido", "Cancelado"],
       status_geral: ["Ativo", "Inativo"],
       status_indicador: ["Ativo", "Inativo"],
@@ -648,6 +662,7 @@ export const Constants = {
         "Fornecedor",
         "Despesa Operacional",
         "Outros",
+        "Comissao",
       ],
       tipo_pessoa: ["PF", "PJ"],
     },

@@ -28,6 +28,8 @@ const Comissoes = () => {
     switch (status) {
       case "Paga":
         return "bg-green-100 text-green-800";
+      case "A Receber":
+        return "bg-orange-100 text-orange-800";
       case "Pendente":
         return "bg-yellow-100 text-yellow-800";
       default:
@@ -74,6 +76,7 @@ const Comissoes = () => {
     }
   };
   const totalPendente = comissoes.filter(c => c.status === 'Pendente').reduce((acc, c) => acc + parseFloat(c.valor.replace('R$ ', '').replace(',', '.')), 0);
+  const totalAReceber = comissoes.filter(c => c.status === 'A Receber').reduce((acc, c) => acc + parseFloat(c.valor.replace('R$ ', '').replace(',', '.')), 0);
   const totalPago = comissoes.filter(c => c.status === 'Paga').reduce((acc, c) => acc + parseFloat(c.valor.replace('R$ ', '').replace(',', '.')), 0);
   return <Layout>
       <AppNavigation />
@@ -88,10 +91,14 @@ const Comissoes = () => {
         </div>
 
         {/* Cards de resumo */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="p-6">
             <h3 className="text-lg font-semibold text-slate-900 mb-2">Total Pendente</h3>
             <p className="text-3xl font-bold text-yellow-600">R$ {totalPendente.toFixed(2)}</p>
+          </Card>
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">A Receber</h3>
+            <p className="text-3xl font-bold text-orange-600">R$ {totalAReceber.toFixed(2)}</p>
           </Card>
           <Card className="p-6">
             <h3 className="text-lg font-semibold text-slate-900 mb-2">Total Pago</h3>

@@ -13,9 +13,10 @@ export interface Comissao {
   vendedorId?: string;
   valor: string;
   percentual: string;
-  status: 'Pendente' | 'Paga';
+  status: 'Pendente' | 'A Receber' | 'Paga';
   dataPagamento?: string;
   observacoes?: string;
+  contaPagarId?: string;
 }
 
 export const useComissoes = () => {
@@ -41,6 +42,9 @@ export const useComissoes = () => {
           ),
           vendas (
             pedido_segura
+          ),
+          contas_a_pagar!comissao_id (
+            id
           )
         `)
         .order('created_at', { ascending: false });
@@ -58,7 +62,8 @@ export const useComissoes = () => {
         percentual: `${item.percentual}%`,
         status: item.status,
         dataPagamento: item.data_pagamento ? new Date(item.data_pagamento).toLocaleDateString('pt-BR') : undefined,
-        observacoes: item.observacoes
+        observacoes: item.observacoes,
+        contaPagarId: (item as any).contas_a_pagar?.[0]?.id
       }));
 
       setComissoes(mappedComissoes);
