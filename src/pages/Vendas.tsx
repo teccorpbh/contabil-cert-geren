@@ -12,6 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useVendas } from "@/hooks/useVendas";
 import { useClientes } from "@/hooks/useClientes";
 import VendaModal from "@/components/VendaModal";
+import { addDays, format } from "date-fns";
 const Vendas = () => {
   const navigate = useNavigate();
   const {
@@ -110,6 +111,10 @@ const Vendas = () => {
       if (!cliente.cpf_cnpj || !cliente.email || !cliente.endereco || !cliente.numero || !cliente.cidade || !cliente.estado || !cliente.cep) {
         throw new Error('Cliente possui dados incompletos. Verifique se todos os campos obrigatórios estão preenchidos (CPF/CNPJ, Email, Endereço Completo).');
       }
+
+      // Calcular data de vencimento: hoje + 2 dias
+      const dataVencimento = format(addDays(new Date(), 2), 'dd/MM/yyyy');
+
       const payload = {
         venda: {
           id: venda.id,
@@ -118,7 +123,7 @@ const Vendas = () => {
           status: venda.status,
           status_pagamento: venda.statusPagamento,
           data: venda.data,
-          data_vencimento: venda.dataVencimento,
+          data_vencimento: dataVencimento,
           responsavel: venda.responsavel,
           indicador: venda.indicador
         },
