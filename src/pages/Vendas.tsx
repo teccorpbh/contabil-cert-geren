@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Layout from "@/components/Layout";
 import AppNavigation from "@/components/AppNavigation";
@@ -8,75 +7,68 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, Plus, Eye, Edit, Trash, Receipt, FileCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useVendas } from "@/hooks/useVendas";
 import { useClientes } from "@/hooks/useClientes";
 import VendaModal from "@/components/VendaModal";
-
 const Vendas = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { vendas, createVenda, updateVenda, deleteVenda, getVenda } = useVendas();
-  const { clientes } = useClientes();
-  
+  const {
+    toast
+  } = useToast();
+  const {
+    vendas,
+    createVenda,
+    updateVenda,
+    deleteVenda,
+    getVenda
+  } = useVendas();
+  const {
+    clientes
+  } = useClientes();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
   const [selectedVenda, setSelectedVenda] = useState<any>(null);
   const [loadingBoleto, setLoadingBoleto] = useState<string | null>(null);
-
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Emitido": return "bg-green-100 text-green-800";
-      case "Pendente": return "bg-yellow-100 text-yellow-800";
-      case "Cancelado": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "Emitido":
+        return "bg-green-100 text-green-800";
+      case "Pendente":
+        return "bg-yellow-100 text-yellow-800";
+      case "Cancelado":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
-
   const getPagamentoStatusColor = (status: string) => {
     switch (status) {
-      case "Pago": return "bg-green-100 text-green-800";
-      case "Pendente": return "bg-yellow-100 text-yellow-800";
-      case "Vencido": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "Pago":
+        return "bg-green-100 text-green-800";
+      case "Pendente":
+        return "bg-yellow-100 text-yellow-800";
+      case "Vencido":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
-
   const handleCreate = () => {
     setSelectedVenda(null);
     setModalMode('create');
     setModalOpen(true);
   };
-
   const handleView = (id: string) => {
     navigate(`/vendas/${id}`);
   };
-
   const handleEdit = (id: string) => {
     const venda = getVenda(id);
     setSelectedVenda(venda);
     setModalMode('edit');
     setModalOpen(true);
   };
-
   const handleDelete = (id: string) => {
     deleteVenda(id);
     toast({
@@ -84,7 +76,6 @@ const Vendas = () => {
       description: "A venda foi excluída com sucesso."
     });
   };
-
   const handleSave = (vendaData: any) => {
     if (modalMode === 'create') {
       createVenda(vendaData);
@@ -100,25 +91,20 @@ const Vendas = () => {
       });
     }
   };
-
   const handleGerarBoleto = async (vendaId: string) => {
     setLoadingBoleto(vendaId);
-    
     try {
       const venda = getVenda(vendaId);
       if (!venda) {
         throw new Error('Venda não encontrada');
       }
-      
       if (!venda.clienteId) {
         throw new Error('Venda não possui cliente associado');
       }
-      
       const cliente = clientes.find(c => c.id === venda.clienteId);
       if (!cliente) {
         throw new Error('Cliente não encontrado');
       }
-      
       const payload = {
         venda: {
           id: venda.id,
@@ -147,23 +133,20 @@ const Vendas = () => {
           cep: cliente.cep
         }
       };
-      
       const response = await fetch('https://n8n.rockethub.com.br/webhook/8b4d-4b975503c913/asaas', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'api_token': 'ea04a06d-d591-426f-b8d8-0cd103ef0fb1',
+          'api_token': 'ea04a06d-d591-426f-b8d8-0cd103ef0fb1'
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(payload)
       });
-      
       if (!response.ok) {
         throw new Error(`Erro ao gerar boleto: ${response.statusText}`);
       }
-      
       const responseData = await response.json();
       console.log('Boleto gerado com sucesso:', responseData);
-      
+
       // Salvar URLs do boleto na venda
       if (responseData && responseData.length > 0) {
         const paymentData = responseData[0];
@@ -174,26 +157,22 @@ const Vendas = () => {
           nossoNumero: paymentData.nossoNumero
         });
       }
-      
       toast({
         title: "Boleto gerado com sucesso!",
-        description: `O boleto para a venda ${venda.pedidoSegura} foi gerado e salvo.`,
+        description: `O boleto para a venda ${venda.pedidoSegura} foi gerado e salvo.`
       });
-      
     } catch (error: any) {
       console.error('Erro ao gerar boleto:', error);
       toast({
         title: "Erro ao gerar boleto",
         description: error.message,
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setLoadingBoleto(null);
     }
   };
-
-  return (
-    <Layout>
+  return <Layout>
       <AppNavigation />
 
       <div className="container mx-auto px-6 py-8">
@@ -202,10 +181,7 @@ const Vendas = () => {
             <h1 className="text-3xl font-bold text-slate-900">Vendas</h1>
             <p className="text-slate-600 mt-2">Gerencie todas as vendas de certificados digitais</p>
           </div>
-          <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={handleCreate} aria-label="Criar nova venda">
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Venda
-          </Button>
+          
         </div>
 
         <Card className="p-6">
@@ -225,8 +201,7 @@ const Vendas = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {vendas.map((venda) => (
-                <TableRow key={venda.id}>
+              {vendas.map(venda => <TableRow key={venda.id}>
                   <TableCell className="font-medium">{venda.id}</TableCell>
                   <TableCell>{venda.pedidoSegura}</TableCell>
                   <TableCell>{venda.cliente}</TableCell>
@@ -252,41 +227,14 @@ const Vendas = () => {
                       <Button size="sm" variant="outline" onClick={() => handleEdit(venda.id)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      {venda.boletoUrl && (
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          onClick={() => window.open(venda.boletoUrl, '_blank', 'noopener,noreferrer')}
-                          aria-label={`Abrir boleto da venda ${venda.pedidoSegura}`}
-                          title="Ver Boleto"
-                        >
+                      {venda.boletoUrl && <Button size="sm" variant="outline" onClick={() => window.open(venda.boletoUrl, '_blank', 'noopener,noreferrer')} aria-label={`Abrir boleto da venda ${venda.pedidoSegura}`} title="Ver Boleto">
                           <Receipt className="h-4 w-4 text-green-600" />
-                        </Button>
-                      )}
-                      {venda.invoiceUrl && (
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          onClick={() => window.open(venda.invoiceUrl, '_blank', 'noopener,noreferrer')}
-                          aria-label={`Abrir fatura da venda ${venda.pedidoSegura}`}
-                          title="Ver Fatura"
-                        >
+                        </Button>}
+                      {venda.invoiceUrl && <Button size="sm" variant="outline" onClick={() => window.open(venda.invoiceUrl, '_blank', 'noopener,noreferrer')} aria-label={`Abrir fatura da venda ${venda.pedidoSegura}`} title="Ver Fatura">
                           <FileCheck className="h-4 w-4 text-blue-600" />
-                        </Button>
-                      )}
-                      <Button 
-                        size="sm" 
-                        variant="secondary" 
-                        onClick={() => handleGerarBoleto(venda.id)}
-                        disabled={!venda.clienteId || loadingBoleto === venda.id}
-                        aria-label={venda.boletoUrl ? `Regerar boleto para venda ${venda.pedidoSegura}` : `Gerar boleto para venda ${venda.pedidoSegura}`}
-                        title={venda.boletoUrl ? "Regerar Boleto" : "Gerar Boleto"}
-                      >
-                        {loadingBoleto === venda.id ? (
-                          <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
-                        ) : (
-                          <FileText className="h-4 w-4" />
-                        )}
+                        </Button>}
+                      <Button size="sm" variant="secondary" onClick={() => handleGerarBoleto(venda.id)} disabled={!venda.clienteId || loadingBoleto === venda.id} aria-label={venda.boletoUrl ? `Regerar boleto para venda ${venda.pedidoSegura}` : `Gerar boleto para venda ${venda.pedidoSegura}`} title={venda.boletoUrl ? "Regerar Boleto" : "Gerar Boleto"}>
+                        {loadingBoleto === venda.id ? <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" /> : <FileText className="h-4 w-4" />}
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -311,22 +259,13 @@ const Vendas = () => {
                       </AlertDialog>
                     </div>
                   </TableCell>
-                </TableRow>
-              ))}
+                </TableRow>)}
             </TableBody>
           </Table>
         </Card>
       </div>
 
-      <VendaModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSave={handleSave}
-        venda={selectedVenda}
-        mode={modalMode}
-      />
-    </Layout>
-  );
+      <VendaModal isOpen={modalOpen} onClose={() => setModalOpen(false)} onSave={handleSave} venda={selectedVenda} mode={modalMode} />
+    </Layout>;
 };
-
 export default Vendas;
