@@ -102,23 +102,36 @@ const NovaVenda = () => {
   // Extrair data mais recente do paymentHistory quando pedidoData for carregado
   useEffect(() => {
     if (pedidoData?.data?.paymentHistory && pedidoData.data.paymentHistory.length > 0) {
-      // Ordenar por data mais recente
-      const sortedHistory = [...pedidoData.data.paymentHistory].sort((a, b) => {
-        const dateA = new Date(a.date.split('/').reverse().join('-'));
-        const dateB = new Date(b.date.split('/').reverse().join('-'));
-        return dateB.getTime() - dateA.getTime();
-      });
-      
-      // Pegar data mais recente e converter para formato yyyy-MM-dd
-      const mostRecentDate = sortedHistory[0].date;
-      const [day, month, year] = mostRecentDate.split(' ')[0].split('/');
-      const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-      setDataCertificado(formattedDate);
-    } else {
-      // Se não houver histórico, usar data atual
-      const today = new Date().toISOString().split('T')[0];
-      setDataCertificado(today);
+      try {
+        // Ordenar por data mais recente
+        const sortedHistory = [...pedidoData.data.paymentHistory].sort((a, b) => {
+          const dateA = new Date(a.date.split('/').reverse().join('-'));
+          const dateB = new Date(b.date.split('/').reverse().join('-'));
+          return dateB.getTime() - dateA.getTime();
+        });
+        
+        // Pegar data mais recente e converter para formato yyyy-MM-dd
+        const mostRecentDate = sortedHistory[0].date;
+        const datePart = mostRecentDate.split(' ')[0]; // Pegar apenas a parte da data (dd/mm/yyyy)
+        const dateParts = datePart.split('/');
+        
+        // Validar se temos todos os componentes da data
+        if (dateParts.length === 3) {
+          const [day, month, year] = dateParts;
+          if (day && month && year) {
+            const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            setDataCertificado(formattedDate);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao processar data do paymentHistory:', error);
+      }
     }
+    
+    // Se não houver histórico ou houver erro, usar data atual
+    const today = new Date().toISOString().split('T')[0];
+    setDataCertificado(today);
   }, [pedidoData]);
 
   const handleBuscarPedido = async () => {
