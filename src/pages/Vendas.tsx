@@ -105,6 +105,11 @@ const Vendas = () => {
       if (!cliente) {
         throw new Error('Cliente não encontrado');
       }
+
+      // Validar campos obrigatórios do cliente
+      if (!cliente.cpf_cnpj || !cliente.email || !cliente.endereco || !cliente.numero || !cliente.cidade || !cliente.estado || !cliente.cep) {
+        throw new Error('Cliente possui dados incompletos. Verifique se todos os campos obrigatórios estão preenchidos (CPF/CNPJ, Email, Endereço Completo).');
+      }
       const payload = {
         venda: {
           id: venda.id,
@@ -133,40 +138,72 @@ const Vendas = () => {
           cep: cliente.cep
         }
       };
-      const response = await fetch('https://n8n.rockethub.com.br/webhook/8b4d-4b975503c913/asaas', {
+      const response = await fetch('https://n8n.rockethub.com.br/webhook/bcb1-62f6d45cf804/asaas', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'api_token': 'ea04a06d-d591-426f-b8d8-0cd103ef0fb1'
+          'api_token': 'Z6tDbRPCXdljVLCLsaGh0yiVbwEYCiNT'
         },
         body: JSON.stringify(payload)
       });
       if (!response.ok) {
-        throw new Error(`Erro ao gerar boleto: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('Erro da API:', errorText);
+        throw new Error(`Erro ao gerar boleto: ${response.status} - ${errorText}`);
       }
+
       const responseData = await response.json();
-      console.log('Boleto gerado com sucesso:', responseData);
+      console.log('Resposta completa da API:', responseData);
+
+      if (!responseData || !Array.isArray(responseData) || responseData.length === 0) {
+        throw new Error('Resposta da API inválida ou vazia');
+      }
+
+      const paymentData = responseData[0];
+
+      // Validar campos obrigatórios do retorno
+      if (!paymentData.id || !paymentData.bankSlipUrl || !paymentData.invoiceUrl) {
+        console.error('Dados incompletos no retorno:', paymentData);
+        throw new Error('API retornou dados incompletos');
+      }
 
       // Salvar URLs do boleto na venda
-      if (responseData && responseData.length > 0) {
-        const paymentData = responseData[0];
-        await updateVenda(vendaId, {
-          boletoUrl: paymentData.bankSlipUrl,
-          invoiceUrl: paymentData.invoiceUrl,
-          asaasPaymentId: paymentData.id,
-          nossoNumero: paymentData.nossoNumero
-        });
-      }
+      await updateVenda(vendaId, {
+        boletoUrl: paymentData.bankSlipUrl,
+        invoiceUrl: paymentData.invoiceUrl,
+        asaasPaymentId: paymentData.id,
+        nossoNumero: paymentData.nossoNumero
+      });
+
       toast({
         title: "Boleto gerado com sucesso!",
-        description: `O boleto para a venda ${venda.pedidoSegura} foi gerado e salvo.`
+        description: `Boleto para a venda ${venda.pedidoSegura} foi gerado. Nosso Número: ${paymentData.nossoNumero}`,
+        duration: 5000,
       });
+
+      // Abrir o boleto em nova aba automaticamente
+      if (paymentData.bankSlipUrl) {
+        window.open(paymentData.bankSlipUrl, '_blank', 'noopener,noreferrer');
+      }
     } catch (error: any) {
       console.error('Erro ao gerar boleto:', error);
+
+      let errorMessage = error.message;
+
+      // Traduzir erros comuns
+      if (error.message.includes('403')) {
+        errorMessage = 'Erro de autenticação com o serviço de boletos. Entre em contato com o suporte.';
+      } else if (error.message.includes('Network') || error.message.includes('Failed to fetch')) {
+        errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.';
+      } else if (error.message.includes('timeout')) {
+        errorMessage = 'Tempo de resposta excedido. Tente novamente em alguns instantes.';
+      }
+
       toast({
         title: "Erro ao gerar boleto",
-        description: error.message,
-        variant: "destructive"
+        description: errorMessage,
+        variant: "destructive",
+        duration: 7000,
       });
     } finally {
       setLoadingBoleto(null);
