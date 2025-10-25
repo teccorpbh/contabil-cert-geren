@@ -103,27 +103,19 @@ const NovaVenda = () => {
   useEffect(() => {
     if (pedidoData?.data?.paymentHistory && pedidoData.data.paymentHistory.length > 0) {
       try {
-        // Ordenar por data mais recente
+        // Ordenar por data mais recente (formato: yyyy-MM-dd HH:mm:ss)
         const sortedHistory = [...pedidoData.data.paymentHistory].sort((a, b) => {
-          const dateA = new Date(a.date.split('/').reverse().join('-'));
-          const dateB = new Date(b.date.split('/').reverse().join('-'));
+          const dateA = new Date(a.date);
+          const dateB = new Date(b.date);
           return dateB.getTime() - dateA.getTime();
         });
         
-        // Pegar data mais recente e converter para formato yyyy-MM-dd
+        // Pegar data mais recente (já está no formato yyyy-MM-dd HH:mm:ss)
         const mostRecentDate = sortedHistory[0].date;
-        const datePart = mostRecentDate.split(' ')[0]; // Pegar apenas a parte da data (dd/mm/yyyy)
-        const dateParts = datePart.split('/');
-        
-        // Validar se temos todos os componentes da data
-        if (dateParts.length === 3) {
-          const [day, month, year] = dateParts;
-          if (day && month && year) {
-            const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-            setDataCertificado(formattedDate);
-            return;
-          }
-        }
+        // Extrair apenas a parte da data (yyyy-MM-dd)
+        const datePart = mostRecentDate.split(' ')[0];
+        setDataCertificado(datePart);
+        return;
       } catch (error) {
         console.error('Erro ao processar data do paymentHistory:', error);
       }
