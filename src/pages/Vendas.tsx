@@ -164,10 +164,20 @@ const Vendas = () => {
         throw new Error('Resposta da API inválida ou vazia');
       }
 
-      const paymentData = responseData[0];
+      // A API retorna um array com objeto contendo status e return
+      const apiResponse = responseData[0];
+
+      // Verificar se o status é success
+      if (!apiResponse || apiResponse.status !== 'success') {
+        console.error('API retornou erro:', apiResponse);
+        throw new Error('API retornou erro ou status inválido');
+      }
+
+      // Os dados do payment estão dentro de 'return'
+      const paymentData = apiResponse.return;
 
       // Validar campos obrigatórios do retorno
-      if (!paymentData.id || !paymentData.bankSlipUrl || !paymentData.invoiceUrl) {
+      if (!paymentData || !paymentData.id || !paymentData.bankSlipUrl || !paymentData.invoiceUrl) {
         console.error('Dados incompletos no retorno:', paymentData);
         throw new Error('API retornou dados incompletos');
       }
