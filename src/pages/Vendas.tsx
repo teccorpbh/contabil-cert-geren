@@ -298,7 +298,7 @@ const Vendas = () => {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Tem certeza que deseja excluir esta venda? Esta ação não pode ser desfeita.
+                              Tem certeza que deseja excluir esta venda? Todas as comissões associadas a esta venda também serão excluídas. Esta ação não pode ser desfeita.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
