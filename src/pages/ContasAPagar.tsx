@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import AppNavigation from "@/components/AppNavigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +19,28 @@ export default function ContasAPagar() {
   const [selectedConta, setSelectedConta] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [contaToDelete, setContaToDelete] = useState<string | null>(null);
+
+  // SEO: title, meta description and canonical
+  useEffect(() => {
+    document.title = "Contas a Pagar | Gestão Financeira";
+
+    const metaDesc = "Contas a pagar: despesas, vencimentos e pagamentos pendentes.";
+    let meta = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.setAttribute('name', 'description');
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute('content', metaDesc);
+
+    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', window.location.href);
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
