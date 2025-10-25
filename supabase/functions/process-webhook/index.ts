@@ -110,6 +110,7 @@ Deno.serve(async (req) => {
       throw new Error('CPF or CNPJ is required');
     }
 
+    // Check if client already exists by CPF/CNPJ (read-only check)
     const { data: existingClient } = await supabase
       .from('clientes')
       .select('*')
@@ -117,66 +118,15 @@ Deno.serve(async (req) => {
       .eq('user_id', user.id)
       .maybeSingle();
 
-    let clienteId = existingClient?.id;
-
-    // If client doesn't exist, create it
-    if (!existingClient) {
-      console.log('Creating new client...');
-      
-      // Determinar o nome baseado no tipo de pessoa
-      let nomeCliente: string;
-      if (clientProfile.type === 'PF' || clientProfile.cpf) {
-        // Para Pessoa Física, concatenar name e surname
-        const firstName = clientProfile.name?.trim() || '';
-        const lastName = clientProfile.surname?.trim() || '';
-        nomeCliente = `${firstName} ${lastName}`.trim() || 'Cliente Não Identificado';
-      } else {
-        // Para Pessoa Jurídica, usar razão social ou nome fantasia
-        nomeCliente = clientProfile.socialReason || clientProfile.tradeName || 'Cliente Não Identificado';
-      }
-      
-      const newClient = {
-        nome_razao_social: nomeCliente,
-        cpf_cnpj: cpfCnpj,
-        tipo_pessoa: clientProfile.cpf ? 'PF' as const : 'PJ' as const,
-        email: clientProfile.email,
-        telefone: clientProfile.phoneOne,
-        cep: clientProfile.cep,
-        endereco: clientProfile.address,
-        numero: clientProfile.number,
-        complemento: clientProfile.complement,
-        bairro: clientProfile.neighborhood,
-        cidade: clientProfile.city,
-        estado: clientProfile.state,
-        inscricao_municipal: clientProfile.municipalRegistration,
-        inscricao_estadual: clientProfile.stateRegistration,
-        status: 'Ativo' as const,
-        user_id: user.id,
-      };
-
-      const { data: createdClient, error: createError } = await supabase
-        .from('clientes')
-        .insert([newClient])
-        .select()
-        .single();
-
-      if (createError) {
-        console.error('Error creating client:', createError);
-        throw createError;
-      }
-
-      clienteId = createdClient.id;
-      console.log('Client created successfully:', clienteId);
-    } else {
-      console.log('Using existing client:', clienteId);
-    }
+    console.log('Client check:', existingClient ? 'exists' : 'does not exist');
 
     // Check if there's scheduling information in the status
-    let agendamentoId = null;
     const orderStatus = n8nData.data?.orderDetails?.status;
+    let agendamentoDetectado = false;
+    let dataAgendamento = null;
     
     if (orderStatus && orderStatus.includes('Agendado')) {
-      console.log('Creating agendamento from status:', orderStatus);
+      console.log('Scheduling detected in status:', orderStatus);
       
       // Parse scheduling date from status string like "Agendado Dia 18/08/2025 14:00"
       const dateMatch = orderStatus.match(/Agendado Dia (\d{2}\/\d{2}\/\d{4}) (\d{2}:\d{2})/);
@@ -195,51 +145,20 @@ Deno.serve(async (req) => {
           parseInt(minute)
         );
         
+        agendamentoDetectado = true;
+        dataAgendamento = agendamentoDate.toISOString();
         console.log('Parsed agendamento date:', agendamentoDate);
-        
-        // Create agendamento record
-        const newAgendamento = {
-          venda_id: null, // Will be updated when venda is created
-          pedido_segura: id_pedido,
-          cliente_id: clienteId,
-          data_agendamento: agendamentoDate.toISOString(),
-          status: 'Agendado' as const,
-          user_id: user.id,
-        };
-        
-        const { data: createdAgendamento, error: agendamentoError } = await supabase
-          .from('agendamentos')
-          .insert([newAgendamento])
-          .select()
-          .single();
-        
-        if (agendamentoError) {
-          console.error('Error creating agendamento:', agendamentoError);
-          // Don't throw error, just log it as agendamento is not critical
-        } else {
-          agendamentoId = createdAgendamento.id;
-          console.log('Agendamento created successfully:', agendamentoId);
-        }
       }
     }
 
-    // Return the processed data with client information
+    // Return the processed data without creating any records
     const response = {
       success: true,
-      clienteId,
-      clienteExistente: !!existingClient,
-      agendamentoId,
-      agendamentoCriado: !!agendamentoId,
+      clienteExiste: !!existingClient,
+      clienteExistenteId: existingClient?.id || null,
+      agendamentoDetectado,
+      dataAgendamento,
       ...n8nData, // Include all original n8n data
-      dadosCliente: existingClient || {
-        nome_razao_social: clientProfile.type === 'PF' || clientProfile.cpf
-          ? `${clientProfile.name?.trim() || ''} ${clientProfile.surname?.trim() || ''}`.trim() || 'Cliente Não Identificado'
-          : clientProfile.socialReason || clientProfile.tradeName || 'Cliente Não Identificado',
-        cpf_cnpj: cpfCnpj,
-        tipo_pessoa: clientProfile.cpf ? 'PF' : 'PJ',
-        email: clientProfile.email,
-        telefone: clientProfile.phoneOne,
-      }
     };
 
     console.log('Webhook processed successfully');

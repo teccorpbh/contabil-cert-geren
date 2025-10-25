@@ -11,7 +11,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useVendas } from "@/hooks/useVendas";
 import { useVendedores } from "@/hooks/useVendedores";
 import { useIndicadores } from "@/hooks/useIndicadores";
-import { useClientes } from "@/hooks/useClientes";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -98,7 +97,6 @@ const NovaVenda = () => {
   const { vendedores, loading: vendedoresLoading } = useVendedores();
   const { indicadores, loading: indicadoresLoading } = useIndicadores();
   const { createVenda } = useVendas();
-  const { findClienteByCpfCnpj } = useClientes();
 
   const handleBuscarPedido = async () => {
     if (!pedidoSegura.trim()) {
@@ -143,16 +141,20 @@ const NovaVenda = () => {
       }
 
       setPedidoData(data);
-      setClienteId(data.clienteId);
+      setClienteId(data.clienteExistenteId);
       
       // Armazenar o preço de custo como referência (não preencher o valor de venda)
       if (data.data?.productData?.value) {
         setPrecoCusto(data.data.productData.value);
       }
 
+      const clienteMsg = data.clienteExiste 
+        ? "Cliente já cadastrado encontrado." 
+        : "Cliente será criado ao salvar a venda.";
+      
       toast({
         title: "Sucesso",
-        description: "Dados do pedido carregados com sucesso! Cliente criado/atualizado.",
+        description: `Dados do pedido carregados com sucesso! ${clienteMsg}`,
       });
 
     } catch (error: any) {
@@ -188,49 +190,139 @@ const NovaVenda = () => {
 
     setLoading(true);
     try {
-      // Encontrar o vendedor selecionado
-      const vendedorSelecionado = vendedores.find(v => v.id === responsavel);
+      // PASSO 1: Criar/Buscar Cliente
+      let finalClienteId = clienteId;
+      const clientProfile = pedidoData?.data?.clientProfile;
       
-      // Encontrar o indicador selecionado (se houver)
-      const indicadorSelecionado = indicador ? indicadores.find(i => i.id === indicador) : null;
+      if (!finalClienteId && clientProfile) {
+        // Cliente não existe, criar agora
+        const cpfCnpj = clientProfile.cpf || clientProfile.cnpj;
+        
+        // Determinar nome do cliente baseado no tipo
+        let nomeCliente: string;
+        if (clientProfile.type === 'PF' || clientProfile.cpf) {
+          nomeCliente = `${clientProfile.name?.trim() || ''} ${clientProfile.surname?.trim() || ''}`.trim() 
+                        || 'Cliente Não Identificado';
+        } else {
+          nomeCliente = clientProfile.socialReason || clientProfile.tradeName || 'Cliente Não Identificado';
+        }
+        
+        const { data: clienteCriado, error: clienteError } = await supabase
+          .from('clientes')
+          .insert([{
+            nome_razao_social: nomeCliente,
+            cpf_cnpj: cpfCnpj,
+            tipo_pessoa: clientProfile.cpf ? 'PF' as const : 'PJ' as const,
+            email: clientProfile.email,
+            telefone: clientProfile.phoneOne,
+            cep: clientProfile.cep,
+            endereco: clientProfile.address,
+            numero: clientProfile.number,
+            complemento: clientProfile.complement,
+            bairro: clientProfile.neighborhood,
+            cidade: clientProfile.city,
+            estado: clientProfile.state,
+            inscricao_municipal: clientProfile.municipalRegistration,
+            inscricao_estadual: clientProfile.stateRegistration,
+            status: 'Ativo' as const,
+            user_id: user.id
+          }])
+          .select()
+          .single();
+        
+        if (clienteError) throw new Error('Falha ao criar cliente');
+        finalClienteId = clienteCriado!.id;
+      }
 
-      // Nome do cliente (da busca ou manual)
-      const nomeCliente = pedidoData?.data?.clientProfile?.type === 'PF' || pedidoData?.data?.clientProfile?.cpf
-        ? `${pedidoData?.data?.clientProfile?.name?.trim() || ''} ${pedidoData?.data?.clientProfile?.surname?.trim() || ''}`.trim() || 'Cliente não identificado'
-        : pedidoData?.data?.clientProfile?.socialReason || 
-          pedidoData?.data?.clientProfile?.tradeName || 
-          "Cliente não identificado";
+      // PASSO 2: Criar Venda
+      const orderStatus = pedidoData?.data?.orderDetails?.status;
+      const vendaStatus = orderStatus === 'Concluído' ? 'Emitido' : 'Pendente';
+      
+      const vendedorSelecionado = vendedores.find(v => v.id === responsavel);
+      const nomeCliente = clientProfile?.type === 'PF' || clientProfile?.cpf
+        ? `${clientProfile?.name?.trim() || ''} ${clientProfile?.surname?.trim() || ''}`.trim() || 'Cliente não identificado'
+        : clientProfile?.socialReason || clientProfile?.tradeName || "Cliente não identificado";
 
-      // Preparar dados da venda
-      const vendaData = {
-        pedidoSegura: pedidoSegura,
-        cliente: nomeCliente,
-        clienteId: clienteId,
-        valor: valorVenda,
-        responsavel: vendedorSelecionado?.nome || responsavel,
-        vendedorId: responsavel,
-        indicador: indicadorSelecionado?.nome || "",
-        indicadorId: indicador && indicador !== "none" ? indicador : undefined,
-        status: 'Pendente' as const,
-        statusPagamento: 'Pendente' as const,
-        data: new Date().toISOString()
-      };
+      const { data: vendaCriada, error: vendaError } = await supabase
+        .from('vendas')
+        .insert([{
+          pedido_segura: pedidoSegura,
+          cliente: nomeCliente,
+          cliente_id: finalClienteId,
+          valor: parseFloat(valorVenda.replace(',', '.')),
+          responsavel: vendedorSelecionado?.nome || responsavel,
+          vendedor_id: responsavel,
+          indicador_id: indicador && indicador !== "none" ? indicador : null,
+          status: vendaStatus,
+          status_pagamento: 'Pendente',
+          user_id: user.id,
+        }])
+        .select()
+        .single();
 
-      await createVenda(vendaData);
+      if (vendaError) throw new Error('Falha ao criar venda');
+
+      // PASSO 3: Criar Agendamento (se houver)
+      if (orderStatus && orderStatus.includes('Agendado')) {
+        const dateMatch = orderStatus.match(/Agendado Dia (\d{2}\/\d{2}\/\d{4}) (\d{2}:\d{2})/);
+        
+        if (dateMatch) {
+          const [, dateStr, timeStr] = dateMatch;
+          const [day, month, year] = dateStr.split('/');
+          const [hour, minute] = timeStr.split(':');
+          
+          const agendamentoDate = new Date(
+            parseInt(year),
+            parseInt(month) - 1,
+            parseInt(day),
+            parseInt(hour),
+            parseInt(minute)
+          );
+          
+          await supabase.from('agendamentos').insert([{
+            venda_id: vendaCriada.id,
+            pedido_segura: pedidoSegura,
+            cliente_id: finalClienteId,
+            data_agendamento: agendamentoDate.toISOString(),
+            status: 'Agendado',
+            user_id: user.id
+          }]);
+        }
+      }
+
+      // PASSO 4: Criar Certificado (se status = "Concluído")
+      if (orderStatus === 'Concluído') {
+        const productName = pedidoData?.data?.productData?.productNameSelected || '';
+        const tipoCertificado = productName.match(/A[13]/i)?.[0]?.toUpperCase() || 'A1';
+        
+        const validity = pedidoData?.data?.productData?.validity || '1 ano';
+        const anos = parseInt(validity) || 1;
+        const validade = new Date();
+        validade.setFullYear(validade.getFullYear() + anos);
+        
+        await supabase.from('certificados').insert([{
+          tipo: tipoCertificado,
+          documento: pedidoSegura,
+          cliente: nomeCliente,
+          validade: validade.toISOString().split('T')[0],
+          status: 'Emitido',
+          venda_id: vendaCriada.id,
+          user_id: user.id
+        }]);
+      }
 
       toast({
         title: "Sucesso",
         description: "Venda registrada com sucesso!",
       });
 
-      // Redirecionar para a lista de vendas
       navigate('/vendas');
 
     } catch (error: any) {
       console.error('Erro ao salvar venda:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível salvar a venda. Tente novamente.",
+        description: error.message || "Não foi possível salvar a venda. Tente novamente.",
         variant: "destructive"
       });
     } finally {
