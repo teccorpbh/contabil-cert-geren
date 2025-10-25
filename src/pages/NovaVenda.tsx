@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Save, Search } from "lucide-react";
+import { FileText, Save, Search, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useVendas } from "@/hooks/useVendas";
@@ -378,6 +378,14 @@ const NovaVenda = () => {
 
   return (
     <Layout>
+      {loading && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background rounded-lg p-8 flex flex-col items-center gap-4 shadow-xl">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <p className="text-lg font-medium">Carregando dados...</p>
+          </div>
+        </div>
+      )}
       <AppNavigation />
       
       <div className="container mx-auto px-6 py-8">
