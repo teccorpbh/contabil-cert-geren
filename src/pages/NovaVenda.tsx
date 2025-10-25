@@ -417,21 +417,19 @@ const NovaVenda = () => {
                 </p>
               </div>
 
-              {/* Preço de Custo (Referência) */}
-              {precoCusto && (
-                <div className="space-y-2">
-                  <Label htmlFor="custo">Preço de Custo (Referência)</Label>
-                  <Input
-                    id="custo"
-                    value={precoCusto}
-                    disabled
-                    className="bg-slate-50"
-                  />
-                  <p className="text-sm text-slate-500">
-                    Este é o preço de custo. Informe o preço de venda no campo abaixo.
-                  </p>
-                </div>
-              )}
+              {/* Preço de Custo */}
+              <div className="space-y-2">
+                <Label htmlFor="custo">Preço de Custo</Label>
+                <Input
+                  id="custo"
+                  placeholder="R$ 0,00"
+                  value={precoCusto}
+                  onChange={(e) => setPrecoCusto(e.target.value)}
+                />
+                <p className="text-sm text-slate-500">
+                  Valor pago pela empresa ao fornecedor. Usado para calcular as comissões.
+                </p>
+              </div>
 
               {/* Valor da Venda */}
               <div className="space-y-2">
