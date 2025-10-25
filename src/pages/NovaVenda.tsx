@@ -90,6 +90,7 @@ const NovaVenda = () => {
   const [pedidoData, setPedidoData] = useState<PedidoData | null>(null);
   const [loading, setLoading] = useState(false);
   const [clienteId, setClienteId] = useState<string | null>(null);
+  const [dataCertificado, setDataCertificado] = useState("");
   
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -97,6 +98,28 @@ const NovaVenda = () => {
   const { vendedores, loading: vendedoresLoading } = useVendedores();
   const { indicadores, loading: indicadoresLoading } = useIndicadores();
   const { createVenda } = useVendas();
+
+  // Extrair data mais recente do paymentHistory quando pedidoData for carregado
+  useEffect(() => {
+    if (pedidoData?.data?.paymentHistory && pedidoData.data.paymentHistory.length > 0) {
+      // Ordenar por data mais recente
+      const sortedHistory = [...pedidoData.data.paymentHistory].sort((a, b) => {
+        const dateA = new Date(a.date.split('/').reverse().join('-'));
+        const dateB = new Date(b.date.split('/').reverse().join('-'));
+        return dateB.getTime() - dateA.getTime();
+      });
+      
+      // Pegar data mais recente e converter para formato yyyy-MM-dd
+      const mostRecentDate = sortedHistory[0].date;
+      const [day, month, year] = mostRecentDate.split(' ')[0].split('/');
+      const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      setDataCertificado(formattedDate);
+    } else {
+      // Se não houver histórico, usar data atual
+      const today = new Date().toISOString().split('T')[0];
+      setDataCertificado(today);
+    }
+  }, [pedidoData]);
 
   const handleBuscarPedido = async () => {
     if (!pedidoSegura.trim()) {
@@ -300,7 +323,10 @@ const NovaVenda = () => {
           
           const validity = pedidoData?.data?.productData?.validity || '1 ano';
           const anos = parseInt(validity) || 1;
-          const validade = new Date();
+          
+          // Usar dataCertificado do formulário ao invés de new Date()
+          const baseDate = dataCertificado ? new Date(dataCertificado + 'T00:00:00') : new Date();
+          const validade = new Date(baseDate);
           validade.setFullYear(validade.getFullYear() + anos);
           
           // Extrair preço de custo do productData
@@ -397,6 +423,20 @@ const NovaVenda = () => {
                   value={valorVenda}
                   onChange={(e) => setValorVenda(e.target.value)}
                 />
+              </div>
+
+              {/* Data do Certificado */}
+              <div className="space-y-2">
+                <Label htmlFor="dataCertificado">Data do Certificado</Label>
+                <Input
+                  id="dataCertificado"
+                  type="date"
+                  value={dataCertificado}
+                  onChange={(e) => setDataCertificado(e.target.value)}
+                />
+                <p className="text-sm text-slate-500">
+                  Data base para cálculo da validade do certificado (preenchida automaticamente com a data do último pagamento)
+                </p>
               </div>
 
               {/* Responsável pela Venda */}
