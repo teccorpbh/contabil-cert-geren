@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Layout from "@/components/Layout";
 import AppNavigation from "@/components/AppNavigation";
@@ -7,64 +6,51 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Eye, Edit, Trash, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useComissoes } from "@/hooks/useComissoes";
 import ComissaoModal from "@/components/ComissaoModal";
-
 const Comissoes = () => {
-  const { toast } = useToast();
-  const { comissoes, createComissao, updateComissao, deleteComissao, getComissao } = useComissoes();
-  
+  const {
+    toast
+  } = useToast();
+  const {
+    comissoes,
+    createComissao,
+    updateComissao,
+    deleteComissao,
+    getComissao
+  } = useComissoes();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
   const [selectedComissao, setSelectedComissao] = useState<any>(null);
-
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Paga": return "bg-green-100 text-green-800";
-      case "Pendente": return "bg-yellow-100 text-yellow-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "Paga":
+        return "bg-green-100 text-green-800";
+      case "Pendente":
+        return "bg-yellow-100 text-yellow-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
-
   const handleCreate = () => {
     setSelectedComissao(null);
     setModalMode('create');
     setModalOpen(true);
   };
-
   const handleView = (id: string) => {
     const comissao = getComissao(id);
     setSelectedComissao(comissao);
     setModalMode('view');
     setModalOpen(true);
   };
-
   const handleEdit = (id: string) => {
     const comissao = getComissao(id);
     setSelectedComissao(comissao);
     setModalMode('edit');
     setModalOpen(true);
   };
-
   const handleDelete = (id: string) => {
     deleteComissao(id);
     toast({
@@ -72,7 +58,6 @@ const Comissoes = () => {
       description: "A comissão foi excluída com sucesso."
     });
   };
-
   const handleSave = (comissaoData: any) => {
     if (modalMode === 'create') {
       createComissao(comissaoData);
@@ -88,17 +73,9 @@ const Comissoes = () => {
       });
     }
   };
-
-  const totalPendente = comissoes
-    .filter(c => c.status === 'Pendente')
-    .reduce((acc, c) => acc + parseFloat(c.valor.replace('R$ ', '').replace(',', '.')), 0);
-
-  const totalPago = comissoes
-    .filter(c => c.status === 'Paga')
-    .reduce((acc, c) => acc + parseFloat(c.valor.replace('R$ ', '').replace(',', '.')), 0);
-
-  return (
-    <Layout>
+  const totalPendente = comissoes.filter(c => c.status === 'Pendente').reduce((acc, c) => acc + parseFloat(c.valor.replace('R$ ', '').replace(',', '.')), 0);
+  const totalPago = comissoes.filter(c => c.status === 'Paga').reduce((acc, c) => acc + parseFloat(c.valor.replace('R$ ', '').replace(',', '.')), 0);
+  return <Layout>
       <AppNavigation />
 
       <div className="container mx-auto px-6 py-8">
@@ -107,10 +84,7 @@ const Comissoes = () => {
             <h1 className="text-3xl font-bold text-slate-900">Comissões</h1>
             <p className="text-slate-600 mt-2">Gerencie todas as comissões de vendas</p>
           </div>
-          <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={handleCreate}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Comissão
-          </Button>
+          
         </div>
 
         {/* Cards de resumo */}
@@ -144,8 +118,7 @@ const Comissoes = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {comissoes.map((comissao) => (
-                <TableRow key={comissao.id}>
+              {comissoes.map(comissao => <TableRow key={comissao.id}>
                   <TableCell className="font-medium">{comissao.id}</TableCell>
                   <TableCell>{comissao.vendaId}</TableCell>
                   <TableCell>{comissao.indicador}</TableCell>
@@ -188,22 +161,13 @@ const Comissoes = () => {
                       </AlertDialog>
                     </div>
                   </TableCell>
-                </TableRow>
-              ))}
+                </TableRow>)}
             </TableBody>
           </Table>
         </Card>
       </div>
 
-      <ComissaoModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSave={handleSave}
-        comissao={selectedComissao}
-        mode={modalMode}
-      />
-    </Layout>
-  );
+      <ComissaoModal isOpen={modalOpen} onClose={() => setModalOpen(false)} onSave={handleSave} comissao={selectedComissao} mode={modalMode} />
+    </Layout>;
 };
-
 export default Comissoes;
