@@ -90,6 +90,7 @@ const NovaVenda = () => {
   const [pedidoData, setPedidoData] = useState<PedidoData | null>(null);
   const [loading, setLoading] = useState(false);
   const [clienteId, setClienteId] = useState<string | null>(null);
+  const [dataVenda, setDataVenda] = useState("");
   const [dataCertificado, setDataCertificado] = useState("");
   
   const { toast } = useToast();
@@ -114,6 +115,9 @@ const NovaVenda = () => {
         const mostRecentDate = sortedHistory[0].date;
         // Extrair apenas a parte da data (yyyy-MM-dd)
         const datePart = mostRecentDate.split(' ')[0];
+        
+        // Preencher ambos os campos com a mesma data inicial
+        setDataVenda(datePart);
         setDataCertificado(datePart);
         return;
       } catch (error) {
@@ -123,6 +127,7 @@ const NovaVenda = () => {
     
     // Se não houver histórico ou houver erro, usar data atual
     const today = new Date().toISOString().split('T')[0];
+    setDataVenda(today);
     setDataCertificado(today);
   }, [pedidoData]);
 
@@ -286,6 +291,7 @@ const NovaVenda = () => {
           indicador_id: indicador && indicador !== "none" ? indicador : null,
           status: vendaStatus,
           status_pagamento: 'Pendente',
+          data: `${dataVenda}T12:00:00Z`,
           user_id: user.id,
         }])
         .select()
@@ -428,6 +434,20 @@ const NovaVenda = () => {
                   value={valorVenda}
                   onChange={(e) => setValorVenda(e.target.value)}
                 />
+              </div>
+
+              {/* Data da Venda */}
+              <div className="space-y-2">
+                <Label htmlFor="dataVenda">Data da Venda</Label>
+                <Input
+                  id="dataVenda"
+                  type="date"
+                  value={dataVenda}
+                  onChange={(e) => setDataVenda(e.target.value)}
+                />
+                <p className="text-sm text-slate-500">
+                  Data em que a venda foi realizada (preenchida automaticamente com a data do último pagamento)
+                </p>
               </div>
 
               {/* Data do Certificado */}
