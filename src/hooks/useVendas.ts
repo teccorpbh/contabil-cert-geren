@@ -224,12 +224,26 @@ export const useVendas = () => {
     if (!user) return;
 
     try {
+      // Primeiro, deletar todas as comissões relacionadas
+      const { error: comissoesError } = await supabase
+        .from('comissoes')
+        .delete()
+        .eq('venda_id', id);
+
+      if (comissoesError) throw comissoesError;
+
+      // Depois, deletar a venda
       const { error } = await supabase
         .from('vendas')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
+      
+      toast({
+        title: "Sucesso",
+        description: "Venda deletada com sucesso!",
+      });
       
       await fetchVendas();
     } catch (error: any) {
