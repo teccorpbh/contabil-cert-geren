@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { parseCurrencyToNumber } from '@/lib/utils';
 
 export interface Venda {
   id: string;
@@ -104,7 +104,7 @@ export const useVendas = () => {
       console.log('Dados da venda recebidos:', venda);
       console.log('User ID:', user.id);
       
-      const valorNumerico = parseFloat(venda.valor.replace('R$', '').replace(',', '.').trim());
+      const valorNumerico = parseCurrencyToNumber(venda.valor);
       console.log('Valor numérico processado:', valorNumerico);
       
       // Validar se vendedor_id existe na tabela vendedores (se fornecido)
@@ -135,7 +135,7 @@ export const useVendas = () => {
         console.log('Indicador validado:', indicadorExists.id);
       }
       
-      const custoNumerico = venda.custo ? parseFloat(venda.custo.replace('R$', '').replace(',', '.').trim()) : 0;
+      const custoNumerico = parseCurrencyToNumber(venda.custo);
       
       const vendaData = {
         pedido_segura: venda.pedidoSegura,
@@ -191,11 +191,11 @@ export const useVendas = () => {
       if (updatedVenda.cliente) updateData.cliente = updatedVenda.cliente;
       if (updatedVenda.clienteId !== undefined) updateData.cliente_id = updatedVenda.clienteId || null;
       if (updatedVenda.valor) {
-        const valorNumerico = parseFloat(updatedVenda.valor.replace('R$', '').replace(',', '.').trim());
+        const valorNumerico = parseCurrencyToNumber(updatedVenda.valor);
         updateData.valor = valorNumerico;
       }
       if (updatedVenda.custo !== undefined) {
-        const custoNumerico = updatedVenda.custo ? parseFloat(updatedVenda.custo.replace('R$', '').replace(',', '.').trim()) : 0;
+        const custoNumerico = parseCurrencyToNumber(updatedVenda.custo);
         updateData.custo = custoNumerico;
       }
       if (updatedVenda.responsavel) updateData.responsavel = updatedVenda.responsavel;

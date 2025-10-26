@@ -14,6 +14,7 @@ import { useIndicadores } from "@/hooks/useIndicadores";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { parseCurrencyToNumber } from "@/lib/utils";
 
 interface PedidoData {
   success: string;
@@ -276,7 +277,17 @@ const NovaVenda = () => {
         ? `${clientProfile?.name?.trim() || ''} ${clientProfile?.surname?.trim() || ''}`.trim() || 'Cliente não identificado'
         : clientProfile?.socialReason || clientProfile?.tradeName || "Cliente não identificado";
 
-      const custoNumerico = precoCusto ? parseFloat(precoCusto.replace(',', '.')) : 0;
+      const custoNumerico = parseCurrencyToNumber(precoCusto);
+      const valorNumerico = parseCurrencyToNumber(valorVenda);
+      
+      if (valorNumerico <= 0) {
+        toast({
+          title: "Erro",
+          description: "Valor da venda inválido",
+          variant: "destructive"
+        });
+        return;
+      }
       
       const { data: vendaCriada, error: vendaError } = await supabase
         .from('vendas')
@@ -284,7 +295,7 @@ const NovaVenda = () => {
           pedido_segura: pedidoSegura,
           cliente: nomeCliente,
           cliente_id: finalClienteId,
-          valor: parseFloat(valorVenda.replace(',', '.')),
+          valor: valorNumerico,
           custo: custoNumerico,
           responsavel: vendedorSelecionado?.nome || responsavel,
           vendedor_id: responsavel,
@@ -341,9 +352,7 @@ const NovaVenda = () => {
           validade.setFullYear(validade.getFullYear() + anos);
           
           // Extrair preço de custo do productData
-          const precoCustoValue = pedidoData?.data?.productData?.value 
-            ? parseFloat(pedidoData.data.productData.value.replace(',', '.'))
-            : null;
+          const precoCustoValue = parseCurrencyToNumber(pedidoData?.data?.productData?.value);
           
           await supabase.from('certificados').insert([{
             tipo: tipoCertificado,
