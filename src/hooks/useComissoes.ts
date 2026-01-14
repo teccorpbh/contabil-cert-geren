@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { parseCurrencyToNumber } from '@/lib/utils';
 
 export interface Comissao {
   id: string;
@@ -91,7 +91,7 @@ export const useComissoes = () => {
     if (!user) return;
 
     try {
-      const valorNumerico = parseFloat(comissao.valor.replace('R$', '').replace(',', '.').trim());
+      const valorNumerico = parseCurrencyToNumber(comissao.valor);
       const percentualNumerico = parseInt(comissao.percentual.replace('%', ''));
       
       const insertData: any = {
@@ -138,8 +138,7 @@ export const useComissoes = () => {
       if (updatedComissao.indicadorId !== undefined) updateData.indicador_id = updatedComissao.indicadorId || null;
       if (updatedComissao.vendedorId !== undefined) updateData.vendedor_id = updatedComissao.vendedorId || null;
       if (updatedComissao.valor) {
-        const valorNumerico = parseFloat(updatedComissao.valor.replace('R$', '').replace(',', '.').trim());
-        updateData.valor = valorNumerico;
+        updateData.valor = parseCurrencyToNumber(updatedComissao.valor);
       }
       if (updatedComissao.percentual) {
         const percentualNumerico = parseInt(updatedComissao.percentual.replace('%', ''));

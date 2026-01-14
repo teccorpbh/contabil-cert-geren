@@ -15,6 +15,7 @@ import VendaModal from "@/components/VendaModal";
 import { addDays, format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { parseCurrencyToNumber } from "@/lib/utils";
 
 const Vendas = () => {
   const navigate = useNavigate();
@@ -109,8 +110,8 @@ const Vendas = () => {
       let bValue: any = b[sortField];
 
       if (sortField === 'valor') {
-        aValue = parseFloat(aValue.replace('R$', '').replace('.', '').replace(',', '.'));
-        bValue = parseFloat(bValue.replace('R$', '').replace('.', '').replace(',', '.'));
+        aValue = parseCurrencyToNumber(aValue);
+        bValue = parseCurrencyToNumber(bValue);
       }
 
       if (sortField === 'data') {
@@ -166,7 +167,7 @@ const Vendas = () => {
         venda: {
           id: venda.id,
           pedido_segura: venda.pedidoSegura,
-          valor: parseFloat(venda.valor.replace('R$', '').replace('.', '').replace(',', '.')),
+          valor: parseCurrencyToNumber(venda.valor),
           status: venda.status,
           status_pagamento: venda.statusPagamento,
           data: venda.data,

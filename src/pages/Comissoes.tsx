@@ -4,12 +4,13 @@ import AppNavigation from "@/components/AppNavigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Eye, Edit, Trash, Plus } from "lucide-react";
+import { Eye, Edit, Trash } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useComissoes } from "@/hooks/useComissoes";
 import ComissaoModal from "@/components/ComissaoModal";
+import { parseCurrencyToNumber } from "@/lib/utils";
 const Comissoes = () => {
   const {
     toast
@@ -75,9 +76,9 @@ const Comissoes = () => {
       });
     }
   };
-  const totalPendente = comissoes.filter(c => c.status === 'Pendente').reduce((acc, c) => acc + parseFloat(c.valor.replace('R$ ', '').replace(',', '.')), 0);
-  const totalAReceber = comissoes.filter(c => c.status === 'A Receber').reduce((acc, c) => acc + parseFloat(c.valor.replace('R$ ', '').replace(',', '.')), 0);
-  const totalPago = comissoes.filter(c => c.status === 'Paga').reduce((acc, c) => acc + parseFloat(c.valor.replace('R$ ', '').replace(',', '.')), 0);
+  const totalPendente = comissoes.filter(c => c.status === 'Pendente').reduce((acc, c) => acc + parseCurrencyToNumber(c.valor), 0);
+  const totalAReceber = comissoes.filter(c => c.status === 'A Receber').reduce((acc, c) => acc + parseCurrencyToNumber(c.valor), 0);
+  const totalPago = comissoes.filter(c => c.status === 'Paga').reduce((acc, c) => acc + parseCurrencyToNumber(c.valor), 0);
   return <Layout>
       <AppNavigation />
 
