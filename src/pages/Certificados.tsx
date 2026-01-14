@@ -1,11 +1,12 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import AppNavigation from "@/components/AppNavigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Eye, Edit, Trash, AlertTriangle, Plus } from "lucide-react";
+import { FileText, Eye, Edit, Trash, AlertTriangle, Plus, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Table,
@@ -31,6 +32,7 @@ import CertificadoModal from "@/components/CertificadoModal";
 
 const Certificados = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { certificados, createCertificado, updateCertificado, deleteCertificado, getCertificado } = useCertificados();
   
   const [modalOpen, setModalOpen] = useState(false);
@@ -147,7 +149,20 @@ const Certificados = () => {
                       {cert.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>{cert.vendaId}</TableCell>
+                  <TableCell>
+                    {cert.vendaPedidoSegura ? (
+                      <Button
+                        variant="link"
+                        className="p-0 h-auto text-primary hover:underline flex items-center gap-1"
+                        onClick={() => navigate(`/vendas/${cert.vendaId}`)}
+                      >
+                        {cert.vendaPedidoSegura}
+                        <ExternalLink className="h-3 w-3" />
+                      </Button>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">-</span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline" onClick={() => handleView(cert.id)}>

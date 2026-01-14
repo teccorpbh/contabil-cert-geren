@@ -13,6 +13,7 @@ export interface Certificado {
   status: 'Emitido' | 'Pendente' | 'Cancelado';
   diasVencimento: number;
   vendaId: string;
+  vendaPedidoSegura?: string;
   precoCusto?: number;
 }
 
@@ -29,12 +30,18 @@ export const useCertificados = () => {
     try {
       const { data, error } = await supabase
         .from('certificados')
-        .select('*')
+        .select(`
+          *,
+          vendas:venda_id (
+            pedido_segura,
+            cliente
+          )
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      const mappedCertificados: Certificado[] = data.map(item => ({
+      const mappedCertificados: Certificado[] = data.map((item: any) => ({
         id: item.id,
         tipo: item.tipo,
         documento: item.documento,
@@ -43,6 +50,7 @@ export const useCertificados = () => {
         status: item.status,
         diasVencimento: item.dias_vencimento || 0,
         vendaId: item.venda_id,
+        vendaPedidoSegura: item.vendas?.pedido_segura || null,
         precoCusto: item.preco_custo
       }));
 
