@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useVendas } from "@/hooks/useVendas";
 import { useClientes } from "@/hooks/useClientes";
+import { supabase } from "@/integrations/supabase/client";
 import VendaModal from "@/components/VendaModal";
 import { addDays, format } from "date-fns";
 import { Input } from "@/components/ui/input";
@@ -191,11 +192,14 @@ const Vendas = () => {
           cep: cliente.cep
         }
       };
-      const response = await fetch('https://n8n.rockethub.com.br/webhook/bcb1-62f6d45cf804/asaas', {
+      
+      // Usar edge function para proteger o token
+      const { data: sessionData } = await supabase.auth.getSession();
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL || 'https://fmrnssjqjjwqpqjzyqfg.supabase.co'}/functions/v1/gerar-boleto`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'api_token': 'Z6tDbRPCXdljVLCLsaGh0yiVbwEYCiNT'
+          'Authorization': `Bearer ${sessionData?.session?.access_token || ''}`
         },
         body: JSON.stringify(payload)
       });
