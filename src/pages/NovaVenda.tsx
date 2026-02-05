@@ -165,6 +165,19 @@ const NovaVenda = () => {
       });
 
       if (error) {
+        console.error('Erro da edge function:', error);
+        
+        // Verificar se é erro do workflow n8n
+        if (error.message?.includes('Workflow execution failed') || 
+            error.context?.body?.includes('Workflow execution failed')) {
+          toast({
+            title: "Erro no sistema externo",
+            description: "O sistema Segura Online não conseguiu processar este pedido. Verifique se o número do pedido está correto ou tente novamente em alguns minutos.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
         throw error;
       }
 
