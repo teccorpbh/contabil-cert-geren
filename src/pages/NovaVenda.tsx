@@ -153,10 +153,13 @@ const NovaVenda = () => {
 
     setLoading(true);
     try {
+      // Limpar o pedido antes de enviar (remover espaços)
+      const pedidoLimpo = pedidoSegura.trim();
+      
       // Chamar a edge function process-webhook
       const { data, error } = await supabase.functions.invoke('process-webhook', {
         body: {
-          id_pedido: pedidoSegura,
+          id_pedido: pedidoLimpo,
           user_id: user.id
         }
       });
