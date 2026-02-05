@@ -174,12 +174,15 @@ const NovaVenda = () => {
         return;
       }
 
+      console.log('Dados recebidos do n8n:', JSON.stringify(data, null, 2));
       setPedidoData(data);
       setClienteId(data.clienteExistenteId);
       
-      // Armazenar o preço de custo como referência (não preencher o valor de venda)
-      if (data.data?.productData?.value) {
-        setPrecoCusto(data.data.productData.value);
+      // Armazenar o preço de custo como referência
+      const precoCustoValue = data.data?.productData?.value || data.data?.productData?.clientFinalPrice || '';
+      if (precoCustoValue) {
+        setPrecoCusto(precoCustoValue);
+        console.log('Preço de custo definido:', precoCustoValue);
       }
 
       const clienteMsg = data.clienteExiste 
@@ -273,9 +276,25 @@ const NovaVenda = () => {
       const vendaStatus = orderStatus === 'Concluído' ? 'Emitido' : 'Pendente';
       
       const vendedorSelecionado = vendedores.find(v => v.id === responsavel);
-      const nomeCliente = clientProfile?.type === 'PF' || clientProfile?.cpf
-        ? `${clientProfile?.name?.trim() || ''} ${clientProfile?.surname?.trim() || ''}`.trim() || 'Cliente não identificado'
-        : clientProfile?.socialReason || clientProfile?.tradeName || "Cliente não identificado";
+      
+      // Determinar nome do cliente de forma robusta
+      const nomeCliente = (() => {
+        const cp = clientProfile;
+        if (!cp) return 'Cliente não identificado';
+        
+        // PJ - tentar razão social ou nome fantasia
+        if (cp.cnpj || cp.type === 'PJ') {
+          const pjName = cp.socialReason || cp.tradeName;
+          if (pjName && pjName.trim()) return pjName.trim();
+        }
+        
+        // PF ou fallback - tentar nome + sobrenome
+        const fullName = `${cp.name?.trim() || ''} ${cp.surname?.trim() || ''}`.trim();
+        if (fullName) return fullName;
+        
+        // Último fallback - razão social/nome fantasia mesmo que seja PF
+        return cp.socialReason?.trim() || cp.tradeName?.trim() || 'Cliente não identificado';
+      })();
 
       const custoNumerico = parseCurrencyToNumber(precoCusto);
       const valorNumerico = parseCurrencyToNumber(valorVenda);
@@ -577,20 +596,30 @@ const NovaVenda = () => {
                       <div className="space-y-2">
                         <Label>Cliente</Label>
                         <Input 
-                          value={
-                            pedidoData.data?.clientProfile?.type === 'PF' || pedidoData.data?.clientProfile?.cpf
-                              ? `${pedidoData.data?.clientProfile?.name?.trim() || ''} ${pedidoData.data?.clientProfile?.surname?.trim() || ''}`.trim() || 'Cliente não identificado'
-                              : pedidoData.data?.clientProfile?.socialReason || 
-                                pedidoData.data?.clientProfile?.tradeName || 
-                                'Cliente não identificado'
-                          }
+                          value={(() => {
+                            const cp = pedidoData.data?.clientProfile;
+                            if (!cp) return 'Cliente não identificado';
+                            
+                            // PJ - tentar razão social ou nome fantasia
+                            if (cp.cnpj || cp.type === 'PJ') {
+                              const pjName = cp.socialReason || cp.tradeName;
+                              if (pjName && pjName.trim()) return pjName.trim();
+                            }
+                            
+                            // PF ou fallback - tentar nome + sobrenome
+                            const fullName = `${cp.name?.trim() || ''} ${cp.surname?.trim() || ''}`.trim();
+                            if (fullName) return fullName;
+                            
+                            // Último fallback - razão social/nome fantasia mesmo que seja PF
+                            return cp.socialReason?.trim() || cp.tradeName?.trim() || 'Cliente não identificado';
+                          })()}
                           disabled 
-                          className="bg-slate-50"
+                          className="bg-muted"
                         />
                       </div>
                      <div className="space-y-2">
                        <Label>Status do Pagamento</Label>
-                       <Input 
+                       <Input
                          value={pedidoData.debug?.lastPaymentStatus || ""} 
                          disabled 
                        />
