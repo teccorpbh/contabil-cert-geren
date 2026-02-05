@@ -65,11 +65,14 @@ Deno.serve(async (req) => {
       throw new Error('Invalid user token');
     }
 
-    // Extract id_pedido from request
-    const { id_pedido } = requestData;
-    if (!id_pedido) {
+    // Extract id_pedido from request and trim whitespace
+    const rawIdPedido = requestData.id_pedido;
+    if (!rawIdPedido) {
       throw new Error('id_pedido is required');
     }
+    
+    const id_pedido = String(rawIdPedido).trim();
+    console.log('Cleaned id_pedido:', id_pedido);
 
     console.log('Fetching order data from n8n webhook...');
     
@@ -86,12 +89,18 @@ Deno.serve(async (req) => {
         id_pedido: id_pedido
       })
     });
+    
+    // Log response status for debugging
+    console.log('n8n response status:', n8nResponse.status);
 
     if (!n8nResponse.ok) {
-      throw new Error(`n8n webhook error: ${n8nResponse.status}`);
+      const errorBody = await n8nResponse.text();
+      console.error('n8n error response:', errorBody);
+      throw new Error(`n8n webhook error: ${n8nResponse.status} - ${errorBody}`);
     }
 
     const n8nData = await n8nResponse.json();
+    console.log('n8n response received successfully');
     console.log('n8n response:', JSON.stringify(n8nData, null, 2));
 
     if (!n8nData.success) {
