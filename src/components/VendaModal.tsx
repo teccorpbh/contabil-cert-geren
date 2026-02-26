@@ -88,7 +88,7 @@ const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) =
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {mode === 'create' && 'Nova Venda'}
@@ -98,129 +98,139 @@ const VendaModal = ({ isOpen, onClose, onSave, venda, mode }: VendaModalProps) =
         </DialogHeader>
 
         <div className="space-y-4">
-          <div>
-            <Label>Pedido Segura</Label>
-            <Input
-              value={formData.pedidoSegura}
-              onChange={(e) => setFormData({...formData, pedidoSegura: e.target.value})}
-              disabled={isReadOnly}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Pedido Segura</Label>
+              <Input
+                value={formData.pedidoSegura}
+                onChange={(e) => setFormData({...formData, pedidoSegura: e.target.value})}
+                disabled={isReadOnly}
+              />
+            </div>
+
+            <div>
+              <Label>Cliente</Label>
+              <Input
+                value={formData.cliente}
+                onChange={(e) => setFormData({...formData, cliente: e.target.value})}
+                disabled={isReadOnly}
+              />
+            </div>
           </div>
 
-          <div>
-            <Label>Cliente</Label>
-            <Input
-              value={formData.cliente}
-              onChange={(e) => setFormData({...formData, cliente: e.target.value})}
-              disabled={isReadOnly}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Valor</Label>
+              <Input
+                value={formData.valor}
+                onChange={(e) => setFormData({...formData, valor: e.target.value})}
+                disabled={isReadOnly}
+                placeholder="R$ 0,00"
+              />
+            </div>
+
+            <div>
+              <Label>Custo</Label>
+              <Input
+                value={formData.custo}
+                onChange={(e) => setFormData({...formData, custo: e.target.value})}
+                disabled={isReadOnly}
+                placeholder="R$ 0,00"
+              />
+            </div>
           </div>
 
-          <div>
-            <Label>Valor</Label>
-            <Input
-              value={formData.valor}
-              onChange={(e) => setFormData({...formData, valor: e.target.value})}
-              disabled={isReadOnly}
-              placeholder="R$ 0,00"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Responsável</Label>
+              <Select 
+                value={formData.vendedorId || 'none'} 
+                onValueChange={(value) => setFormData({...formData, vendedorId: value})} 
+                disabled={isReadOnly}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um vendedor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem vendedor</SelectItem>
+                  {vendedores
+                    .filter(vend => vend.status === 'Ativo')
+                    .map((vendedor) => (
+                      <SelectItem key={vendedor.id} value={vendedor.id}>
+                        {vendedor.nome}
+                      </SelectItem>
+                    ))
+                  }
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Indicador</Label>
+              <Select 
+                value={formData.indicadorId || 'none'} 
+                onValueChange={(value) => setFormData({...formData, indicadorId: value})} 
+                disabled={isReadOnly}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um indicador" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem indicador</SelectItem>
+                  {indicadores
+                    .filter(ind => ind.status === 'Ativo')
+                    .map((indicador) => (
+                      <SelectItem key={indicador.id} value={indicador.id}>
+                        {indicador.nome}
+                      </SelectItem>
+                    ))
+                  }
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div>
-            <Label>Custo</Label>
-            <Input
-              value={formData.custo}
-              onChange={(e) => setFormData({...formData, custo: e.target.value})}
-              disabled={isReadOnly}
-              placeholder="R$ 0,00"
-            />
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Status</Label>
+              <Select value={formData.status} onValueChange={(value: 'Pendente' | 'Emitido' | 'Cancelado') => setFormData({...formData, status: value})} disabled={isReadOnly}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Pendente">Pendente</SelectItem>
+                  <SelectItem value="Emitido">Emitido</SelectItem>
+                  <SelectItem value="Cancelado">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div>
-            <Label>Responsável</Label>
-            <Select 
-              value={formData.vendedorId || 'none'} 
-              onValueChange={(value) => setFormData({...formData, vendedorId: value})} 
-              disabled={isReadOnly}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um vendedor" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Sem vendedor</SelectItem>
-                {vendedores
-                  .filter(vend => vend.status === 'Ativo')
-                  .map((vendedor) => (
-                    <SelectItem key={vendedor.id} value={vendedor.id}>
-                      {vendedor.nome}
-                    </SelectItem>
-                  ))
-                }
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label>Indicador</Label>
-            <Select 
-              value={formData.indicadorId || 'none'} 
-              onValueChange={(value) => setFormData({...formData, indicadorId: value})} 
-              disabled={isReadOnly}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um indicador" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Sem indicador</SelectItem>
-                {indicadores
-                  .filter(ind => ind.status === 'Ativo')
-                  .map((indicador) => (
-                    <SelectItem key={indicador.id} value={indicador.id}>
-                      {indicador.nome}
-                    </SelectItem>
-                  ))
-                }
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label>Status</Label>
-            <Select value={formData.status} onValueChange={(value: 'Pendente' | 'Emitido' | 'Cancelado') => setFormData({...formData, status: value})} disabled={isReadOnly}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Pendente">Pendente</SelectItem>
-                <SelectItem value="Emitido">Emitido</SelectItem>
-                <SelectItem value="Cancelado">Cancelado</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label>Status de Pagamento</Label>
-            <Select value={formData.statusPagamento} onValueChange={(value: 'Pendente' | 'Pago' | 'Vencido') => setFormData({...formData, statusPagamento: value})} disabled={isReadOnly}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Pendente">Pendente</SelectItem>
-                <SelectItem value="Pago">Pago</SelectItem>
-                <SelectItem value="Vencido">Vencido</SelectItem>
-              </SelectContent>
-            </Select>
+            <div>
+              <Label>Status de Pagamento</Label>
+              <Select value={formData.statusPagamento} onValueChange={(value: 'Pendente' | 'Pago' | 'Vencido') => setFormData({...formData, statusPagamento: value})} disabled={isReadOnly}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Pendente">Pendente</SelectItem>
+                  <SelectItem value="Pago">Pago</SelectItem>
+                  <SelectItem value="Vencido">Vencido</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {(formData.statusPagamento === 'Pendente' || formData.statusPagamento === 'Vencido') && (
-            <div>
-              <Label>Data de Vencimento</Label>
-              <Input
-                type="date"
-                value={formData.dataVencimento}
-                onChange={(e) => setFormData({...formData, dataVencimento: e.target.value})}
-                disabled={isReadOnly}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Data de Vencimento</Label>
+                <Input
+                  type="date"
+                  value={formData.dataVencimento}
+                  onChange={(e) => setFormData({...formData, dataVencimento: e.target.value})}
+                  disabled={isReadOnly}
+                />
+              </div>
             </div>
           )}
         </div>

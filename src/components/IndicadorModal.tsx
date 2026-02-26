@@ -56,7 +56,7 @@ const IndicadorModal = ({ isOpen, onClose, onSave, indicador, mode }: IndicadorM
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {mode === 'create' && 'Novo Indicador'}
@@ -66,55 +66,61 @@ const IndicadorModal = ({ isOpen, onClose, onSave, indicador, mode }: IndicadorM
         </DialogHeader>
 
         <div className="space-y-4">
-          <div>
-            <Label>Nome</Label>
-            <Input
-              value={formData.nome}
-              onChange={(e) => setFormData({...formData, nome: e.target.value})}
-              disabled={isReadOnly}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Nome</Label>
+              <Input
+                value={formData.nome}
+                onChange={(e) => setFormData({...formData, nome: e.target.value})}
+                disabled={isReadOnly}
+              />
+            </div>
+
+            <div>
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                disabled={isReadOnly}
+              />
+            </div>
           </div>
 
-          <div>
-            <Label>Email</Label>
-            <Input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
-              disabled={isReadOnly}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Telefone</Label>
+              <Input
+                value={formData.telefone}
+                onChange={(e) => setFormData({...formData, telefone: e.target.value})}
+                disabled={isReadOnly}
+              />
+            </div>
+
+            <div>
+              <Label>Percentual de Comissão (%)</Label>
+              <Input
+                type="number"
+                value={formData.percentualComissao}
+                onChange={(e) => setFormData({...formData, percentualComissao: Number(e.target.value)})}
+                disabled={isReadOnly}
+              />
+            </div>
           </div>
 
-          <div>
-            <Label>Telefone</Label>
-            <Input
-              value={formData.telefone}
-              onChange={(e) => setFormData({...formData, telefone: e.target.value})}
-              disabled={isReadOnly}
-            />
-          </div>
-
-          <div>
-            <Label>Percentual de Comissão (%)</Label>
-            <Input
-              type="number"
-              value={formData.percentualComissao}
-              onChange={(e) => setFormData({...formData, percentualComissao: Number(e.target.value)})}
-              disabled={isReadOnly}
-            />
-          </div>
-
-          <div>
-            <Label>Status</Label>
-            <Select value={formData.status} onValueChange={(value: 'Ativo' | 'Inativo') => setFormData({...formData, status: value})} disabled={isReadOnly}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Ativo">Ativo</SelectItem>
-                <SelectItem value="Inativo">Inativo</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Status</Label>
+              <Select value={formData.status} onValueChange={(value: 'Ativo' | 'Inativo') => setFormData({...formData, status: value})} disabled={isReadOnly}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Ativo">Ativo</SelectItem>
+                  <SelectItem value="Inativo">Inativo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
