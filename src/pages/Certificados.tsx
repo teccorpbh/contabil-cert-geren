@@ -119,7 +119,6 @@ const Certificados = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead>CPF/CNPJ</TableHead>
                 <TableHead>Cliente</TableHead>
@@ -133,7 +132,6 @@ const Certificados = () => {
             <TableBody>
               {certificados.map((cert) => (
                 <TableRow key={cert.id}>
-                  <TableCell className="font-medium">{cert.id}</TableCell>
                   <TableCell>{cert.tipo}</TableCell>
                   <TableCell>{cert.documento}</TableCell>
                   <TableCell>{cert.cliente}</TableCell>

@@ -15,6 +15,8 @@ export interface ContaPagar {
   status: 'Pendente' | 'Pago' | 'Vencido' | 'Cancelado';
   certificadoId: string | null;
   vendaId: string | null;
+  vendaPedidoSegura?: string | null;
+  vendaCliente?: string | null;
   comissaoId: string | null;
   observacoes: string | null;
 }
@@ -32,12 +34,18 @@ export const useContasAPagar = () => {
     try {
       const { data, error } = await supabase
         .from('contas_a_pagar')
-        .select('*')
+        .select(`
+          *,
+          vendas:venda_id (
+            pedido_segura,
+            cliente
+          )
+        `)
         .order('data_vencimento', { ascending: true });
 
       if (error) throw error;
 
-      const mappedContas: ContaPagar[] = data.map(item => ({
+      const mappedContas: ContaPagar[] = data.map((item: any) => ({
         id: item.id,
         descricao: item.descricao,
         valor: item.valor,
@@ -49,6 +57,8 @@ export const useContasAPagar = () => {
         status: item.status,
         certificadoId: item.certificado_id,
         vendaId: item.venda_id,
+        vendaPedidoSegura: item.vendas?.pedido_segura || null,
+        vendaCliente: item.vendas?.cliente || null,
         comissaoId: item.comissao_id,
         observacoes: item.observacoes
       }));

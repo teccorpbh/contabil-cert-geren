@@ -7,6 +7,8 @@ import { parseCurrencyToNumber } from '@/lib/utils';
 export interface Comissao {
   id: string;
   vendaId: string;
+  vendaPedidoSegura?: string;
+  vendaCliente?: string;
   indicador: string;
   indicadorId?: string;
   vendedor?: string;
@@ -41,7 +43,8 @@ export const useComissoes = () => {
             nome
           ),
           vendas (
-            pedido_segura
+            pedido_segura,
+            cliente
           ),
           contas_a_pagar!comissao_id (
             id
@@ -54,6 +57,8 @@ export const useComissoes = () => {
       const mappedComissoes: Comissao[] = data.map(item => ({
         id: item.id,
         vendaId: item.venda_id,
+        vendaPedidoSegura: (item as any).vendas?.pedido_segura || null,
+        vendaCliente: (item as any).vendas?.cliente || null,
         indicador: item.indicadores?.nome || (item.vendedores?.nome ? '' : 'N/A'),
         indicadorId: item.indicador_id,
         vendedor: item.vendedores?.nome || '',
@@ -104,7 +109,6 @@ export const useComissoes = () => {
         user_id: user.id
       };
 
-      // Adicionar indicador_id ou vendedor_id conforme apropriado
       if (comissao.indicadorId) {
         insertData.indicador_id = comissao.indicadorId;
       }
