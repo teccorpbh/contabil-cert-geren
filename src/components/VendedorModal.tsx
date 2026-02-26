@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,7 +52,7 @@ export function VendedorModal({ isOpen, onClose, onSave, vendedor, mode }: Vende
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {mode === 'create' && 'Novo Vendedor'}
@@ -62,73 +62,79 @@ export function VendedorModal({ isOpen, onClose, onSave, vendedor, mode }: Vende
         </DialogHeader>
 
         <div className="space-y-4">
-          <div>
-            <Label htmlFor="nome">Nome *</Label>
-            <Input
-              id="nome"
-              value={formData.nome}
-              onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-              disabled={isReadOnly}
-              required
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="nome">Nome *</Label>
+              <Input
+                id="nome"
+                value={formData.nome}
+                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                disabled={isReadOnly}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                disabled={isReadOnly}
+                required
+              />
+            </div>
           </div>
 
-          <div>
-            <Label htmlFor="email">Email *</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              disabled={isReadOnly}
-              required
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="telefone">Telefone</Label>
+              <Input
+                id="telefone"
+                value={formData.telefone}
+                onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                disabled={isReadOnly}
+                placeholder="(11) 99999-9999"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="percentualComissao">Percentual de Comissão (%)</Label>
+              <Input
+                id="percentualComissao"
+                type="number"
+                min="0"
+                max="100"
+                value={formData.percentualComissao}
+                onChange={(e) => setFormData({ ...formData, percentualComissao: parseInt(e.target.value) || 0 })}
+                disabled={isReadOnly}
+                placeholder="5"
+              />
+            </div>
           </div>
 
-          <div>
-            <Label htmlFor="telefone">Telefone</Label>
-            <Input
-              id="telefone"
-              value={formData.telefone}
-              onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
-              disabled={isReadOnly}
-              placeholder="(11) 99999-9999"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="status">Status</Label>
-            <Select
-              value={formData.status}
-              onValueChange={(value: 'Ativo' | 'Inativo') => setFormData({ ...formData, status: value })}
-              disabled={isReadOnly}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Ativo">Ativo</SelectItem>
-                <SelectItem value="Inativo">Inativo</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="percentualComissao">Percentual de Comissão (%)</Label>
-            <Input
-              id="percentualComissao"
-              type="number"
-              min="0"
-              max="100"
-              value={formData.percentualComissao}
-              onChange={(e) => setFormData({ ...formData, percentualComissao: parseInt(e.target.value) || 0 })}
-              disabled={isReadOnly}
-              placeholder="5"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="status">Status</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value: 'Ativo' | 'Inativo') => setFormData({ ...formData, status: value })}
+                disabled={isReadOnly}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Ativo">Ativo</SelectItem>
+                  <SelectItem value="Inativo">Inativo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
-        <div className="flex justify-end space-x-2 pt-4">
+        <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             {mode === 'view' ? 'Fechar' : 'Cancelar'}
           </Button>
@@ -140,7 +146,7 @@ export function VendedorModal({ isOpen, onClose, onSave, vendedor, mode }: Vende
               {mode === 'create' ? 'Criar' : 'Salvar'}
             </Button>
           )}
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

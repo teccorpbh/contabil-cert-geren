@@ -49,7 +49,7 @@ const CertificadoModal = ({ isOpen, onClose, onSave, certificado, mode }: Certif
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {mode === 'create' && 'Novo Certificado'}
@@ -59,69 +59,75 @@ const CertificadoModal = ({ isOpen, onClose, onSave, certificado, mode }: Certif
         </DialogHeader>
 
         <div className="space-y-4">
-          <div>
-            <Label>Tipo</Label>
-            <Select value={formData.tipo} onValueChange={(value) => setFormData({...formData, tipo: value})} disabled={isReadOnly}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="A1 - Pessoa Física">A1 - Pessoa Física</SelectItem>
-                <SelectItem value="A3 - Pessoa Física">A3 - Pessoa Física</SelectItem>
-                <SelectItem value="A1 - Pessoa Jurídica">A1 - Pessoa Jurídica</SelectItem>
-                <SelectItem value="A3 - Pessoa Jurídica">A3 - Pessoa Jurídica</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Tipo</Label>
+              <Select value={formData.tipo} onValueChange={(value) => setFormData({...formData, tipo: value})} disabled={isReadOnly}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="A1 - Pessoa Física">A1 - Pessoa Física</SelectItem>
+                  <SelectItem value="A3 - Pessoa Física">A3 - Pessoa Física</SelectItem>
+                  <SelectItem value="A1 - Pessoa Jurídica">A1 - Pessoa Jurídica</SelectItem>
+                  <SelectItem value="A3 - Pessoa Jurídica">A3 - Pessoa Jurídica</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>CPF/CNPJ</Label>
+              <Input
+                value={formData.documento}
+                onChange={(e) => setFormData({...formData, documento: e.target.value})}
+                disabled={isReadOnly}
+              />
+            </div>
           </div>
 
-          <div>
-            <Label>CPF/CNPJ</Label>
-            <Input
-              value={formData.documento}
-              onChange={(e) => setFormData({...formData, documento: e.target.value})}
-              disabled={isReadOnly}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Cliente</Label>
+              <Input
+                value={formData.cliente}
+                onChange={(e) => setFormData({...formData, cliente: e.target.value})}
+                disabled={isReadOnly}
+              />
+            </div>
+
+            <div>
+              <Label>Validade</Label>
+              <Input
+                value={formData.validade}
+                onChange={(e) => setFormData({...formData, validade: e.target.value})}
+                disabled={isReadOnly}
+              />
+            </div>
           </div>
 
-          <div>
-            <Label>Cliente</Label>
-            <Input
-              value={formData.cliente}
-              onChange={(e) => setFormData({...formData, cliente: e.target.value})}
-              disabled={isReadOnly}
-            />
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Status</Label>
+              <Select value={formData.status} onValueChange={(value: 'Pendente' | 'Emitido' | 'Cancelado') => setFormData({...formData, status: value})} disabled={isReadOnly}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Pendente">Pendente</SelectItem>
+                  <SelectItem value="Emitido">Emitido</SelectItem>
+                  <SelectItem value="Cancelado">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div>
-            <Label>Validade</Label>
-            <Input
-              value={formData.validade}
-              onChange={(e) => setFormData({...formData, validade: e.target.value})}
-              disabled={isReadOnly}
-            />
-          </div>
-
-          <div>
-            <Label>Status</Label>
-            <Select value={formData.status} onValueChange={(value: 'Pendente' | 'Emitido' | 'Cancelado') => setFormData({...formData, status: value})} disabled={isReadOnly}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Pendente">Pendente</SelectItem>
-                <SelectItem value="Emitido">Emitido</SelectItem>
-                <SelectItem value="Cancelado">Cancelado</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label>Venda ID</Label>
-            <Input
-              value={formData.vendaId}
-              onChange={(e) => setFormData({...formData, vendaId: e.target.value})}
-              disabled={isReadOnly}
-            />
+            <div>
+              <Label>Venda ID</Label>
+              <Input
+                value={formData.vendaId}
+                onChange={(e) => setFormData({...formData, vendaId: e.target.value})}
+                disabled={isReadOnly}
+              />
+            </div>
           </div>
         </div>
 
