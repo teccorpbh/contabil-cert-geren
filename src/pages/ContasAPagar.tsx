@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import AppNavigation from "@/components/AppNavigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,19 +9,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useContasAPagar } from "@/hooks/useContasAPagar";
 import { ContaPagarModal } from "@/components/ContaPagarModal";
-import { Plus, Eye, Trash2, CheckCircle, AlertCircle } from "lucide-react";
+import { Plus, Eye, Trash2, CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function ContasAPagar() {
   const { contas, loading, marcarComoPaga, createConta, deleteConta } = useContasAPagar();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
   const [selectedConta, setSelectedConta] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [contaToDelete, setContaToDelete] = useState<string | null>(null);
 
-  // SEO: title, meta description and canonical
   useEffect(() => {
     document.title = "Contas a Pagar | Gestão Financeira";
 
@@ -44,31 +45,22 @@ export default function ContasAPagar() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Pago':
-        return 'bg-green-500';
-      case 'Pendente':
-        return 'bg-yellow-500';
-      case 'Vencido':
-        return 'bg-red-500';
-      case 'Cancelado':
-        return 'bg-gray-500';
-      default:
-        return 'bg-gray-500';
+      case 'Pago': return 'bg-green-500';
+      case 'Pendente': return 'bg-yellow-500';
+      case 'Vencido': return 'bg-red-500';
+      case 'Cancelado': return 'bg-gray-500';
+      default: return 'bg-gray-500';
     }
   };
 
   const getTipoColor = (tipo: string) => {
     switch (tipo) {
-      case 'Certificado':
-        return 'bg-blue-500';
-      case 'Fornecedor':
-        return 'bg-purple-500';
-      case 'Despesa Operacional':
-        return 'bg-orange-500';
-      case 'Outros':
-        return 'bg-gray-500';
-      default:
-        return 'bg-gray-500';
+      case 'Certificado': return 'bg-blue-500';
+      case 'Fornecedor': return 'bg-purple-500';
+      case 'Despesa Operacional': return 'bg-orange-500';
+      case 'Comissao': return 'bg-teal-500';
+      case 'Outros': return 'bg-gray-500';
+      default: return 'bg-gray-500';
     }
   };
 
@@ -200,6 +192,7 @@ export default function ContasAPagar() {
                 <TableRow>
                   <TableHead>Descrição</TableHead>
                   <TableHead>Fornecedor</TableHead>
+                  <TableHead>Venda</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Valor</TableHead>
                   <TableHead>Vencimento</TableHead>
@@ -210,7 +203,7 @@ export default function ContasAPagar() {
               <TableBody>
                 {contas.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground">
                       Nenhuma conta a pagar cadastrada
                     </TableCell>
                   </TableRow>
@@ -219,6 +212,20 @@ export default function ContasAPagar() {
                     <TableRow key={conta.id}>
                       <TableCell className="font-medium">{conta.descricao}</TableCell>
                       <TableCell>{conta.fornecedor}</TableCell>
+                      <TableCell>
+                        {conta.vendaPedidoSegura ? (
+                          <Button
+                            variant="link"
+                            className="p-0 h-auto text-primary hover:underline flex items-center gap-1"
+                            onClick={() => navigate(`/vendas/${conta.vendaId}`)}
+                          >
+                            {conta.vendaPedidoSegura}
+                            <ExternalLink className="h-3 w-3" />
+                          </Button>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Badge className={getTipoColor(conta.tipo)}>{conta.tipo}</Badge>
                       </TableCell>

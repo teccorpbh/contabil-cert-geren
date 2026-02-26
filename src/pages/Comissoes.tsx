@@ -1,59 +1,55 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import AppNavigation from "@/components/AppNavigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Edit, Trash } from "lucide-react";
+import { Eye, Edit, Trash, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useComissoes } from "@/hooks/useComissoes";
 import ComissaoModal from "@/components/ComissaoModal";
 import { parseCurrencyToNumber } from "@/lib/utils";
+
 const Comissoes = () => {
-  const {
-    toast
-  } = useToast();
-  const {
-    comissoes,
-    createComissao,
-    updateComissao,
-    deleteComissao,
-    getComissao
-  } = useComissoes();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { comissoes, createComissao, updateComissao, deleteComissao, getComissao } = useComissoes();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
   const [selectedComissao, setSelectedComissao] = useState<any>(null);
+
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Paga":
-        return "bg-green-100 text-green-800";
-      case "A Receber":
-        return "bg-orange-100 text-orange-800";
-      case "Pendente":
-        return "bg-yellow-100 text-yellow-800";
-      default:
-        return "bg-gray-100 text-gray-800";
+      case "Paga": return "bg-green-100 text-green-800";
+      case "A Receber": return "bg-orange-100 text-orange-800";
+      case "Pendente": return "bg-yellow-100 text-yellow-800";
+      default: return "bg-gray-100 text-gray-800";
     }
   };
+
   const handleCreate = () => {
     setSelectedComissao(null);
     setModalMode('create');
     setModalOpen(true);
   };
+
   const handleView = (id: string) => {
     const comissao = getComissao(id);
     setSelectedComissao(comissao);
     setModalMode('view');
     setModalOpen(true);
   };
+
   const handleEdit = (id: string) => {
     const comissao = getComissao(id);
     setSelectedComissao(comissao);
     setModalMode('edit');
     setModalOpen(true);
   };
+
   const handleDelete = (id: string) => {
     deleteComissao(id);
     toast({
@@ -61,6 +57,7 @@ const Comissoes = () => {
       description: "A comissão foi excluída com sucesso."
     });
   };
+
   const handleSave = (comissaoData: any) => {
     if (modalMode === 'create') {
       createComissao(comissaoData);
@@ -76,22 +73,22 @@ const Comissoes = () => {
       });
     }
   };
+
   const totalPendente = comissoes.filter(c => c.status === 'Pendente').reduce((acc, c) => acc + parseCurrencyToNumber(c.valor), 0);
   const totalAReceber = comissoes.filter(c => c.status === 'A Receber').reduce((acc, c) => acc + parseCurrencyToNumber(c.valor), 0);
   const totalPago = comissoes.filter(c => c.status === 'Paga').reduce((acc, c) => acc + parseCurrencyToNumber(c.valor), 0);
-  return <Layout>
-      <AppNavigation />
 
+  return (
+    <Layout>
+      <AppNavigation />
       <div className="container mx-auto px-6 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Comissões</h1>
             <p className="text-slate-600 mt-2">Gerencie todas as comissões de vendas</p>
           </div>
-          
         </div>
 
-        {/* Cards de resumo */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="p-6">
             <h3 className="text-lg font-semibold text-slate-900 mb-2">Total Pendente</h3>
@@ -115,9 +112,8 @@ const Comissoes = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
                 <TableHead>Venda</TableHead>
-                <TableHead>Indicador</TableHead>
+                <TableHead>Beneficiário</TableHead>
                 <TableHead>Valor</TableHead>
                 <TableHead>Percentual</TableHead>
                 <TableHead>Status</TableHead>
@@ -126,10 +122,36 @@ const Comissoes = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {comissoes.map(comissao => <TableRow key={comissao.id}>
-                  <TableCell className="font-medium">{comissao.id}</TableCell>
-                  <TableCell>{comissao.vendaId}</TableCell>
-                  <TableCell>{comissao.indicador}</TableCell>
+              {comissoes.map(comissao => (
+                <TableRow key={comissao.id}>
+                  <TableCell>
+                    {comissao.vendaPedidoSegura ? (
+                      <Button
+                        variant="link"
+                        className="p-0 h-auto text-primary hover:underline flex items-center gap-1"
+                        onClick={() => navigate(`/vendas/${comissao.vendaId}`)}
+                      >
+                        {comissao.vendaPedidoSegura}
+                        {comissao.vendaCliente && (
+                          <span className="text-muted-foreground font-normal"> - {comissao.vendaCliente}</span>
+                        )}
+                        <ExternalLink className="h-3 w-3" />
+                      </Button>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {comissao.indicador && comissao.indicador !== 'N/A' && (
+                      <span className="text-sm">📌 {comissao.indicador}</span>
+                    )}
+                    {comissao.vendedor && (
+                      <span className="text-sm">👤 {comissao.vendedor}</span>
+                    )}
+                    {(!comissao.indicador || comissao.indicador === 'N/A') && !comissao.vendedor && (
+                      <span className="text-muted-foreground text-sm">N/A</span>
+                    )}
+                  </TableCell>
                   <TableCell>{comissao.valor}</TableCell>
                   <TableCell>{comissao.percentual}</TableCell>
                   <TableCell>
@@ -169,13 +191,16 @@ const Comissoes = () => {
                       </AlertDialog>
                     </div>
                   </TableCell>
-                </TableRow>)}
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </Card>
       </div>
 
       <ComissaoModal isOpen={modalOpen} onClose={() => setModalOpen(false)} onSave={handleSave} comissao={selectedComissao} mode={modalMode} />
-    </Layout>;
+    </Layout>
+  );
 };
+
 export default Comissoes;
