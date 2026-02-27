@@ -4,7 +4,7 @@ import AppNavigation from "@/components/AppNavigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Eye, Edit, Trash, Receipt, FileCheck, Search, ArrowUpDown } from "lucide-react";
+import { FileText, Eye, Edit, Trash, Receipt, FileCheck, Search, ArrowUpDown, RefreshCw, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -17,6 +17,7 @@ import { addDays, format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { parseCurrencyToNumber } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Vendas = () => {
   const navigate = useNavigate();
@@ -28,7 +29,8 @@ const Vendas = () => {
     createVenda,
     updateVenda,
     deleteVenda,
-    getVenda
+    getVenda,
+    refresh
   } = useVendas();
   const {
     clientes
@@ -40,6 +42,9 @@ const Vendas = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState<'pedidoSegura' | 'cliente' | 'valor' | 'data'>('data');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [refreshingStatus, setRefreshingStatus] = useState<string | null>(null);
+  const [refreshingAll, setRefreshingAll] = useState(false);
+  const { user } = useAuth();
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Emitido":
@@ -271,6 +276,139 @@ const Vendas = () => {
       setLoadingBoleto(null);
     }
   };
+
+  const handleRefreshStatus = async (vendaId: string, pedidoSegura: string) => {
+    if (!user) return;
+    setRefreshingStatus(vendaId);
+    try {
+      const { data, error } = await supabase.functions.invoke('process-webhook', {
+        body: { id_pedido: pedidoSegura.trim(), user_id: user.id }
+      });
+      if (error || !data?.success) throw new Error('Não foi possível consultar o pedido');
+
+      const orderStatus = data.data?.orderDetails?.status;
+      const hasPayment = data.data?.paymentHistory?.some(
+        (p: any) => p.action?.toLowerCase().includes('aprovad') || p.action?.toLowerCase().includes('paid') || p.message?.toLowerCase().includes('aprovad')
+      );
+
+      const newVendaStatus = orderStatus === 'Concluído' ? 'Emitido' : 'Pendente';
+      const newPagamentoStatus = hasPayment ? 'Pago' : 'Pendente';
+
+      await supabase.from('vendas').update({
+        status: newVendaStatus,
+        status_pagamento: newPagamentoStatus
+      }).eq('id', vendaId);
+
+      // Se mudou para Concluído, verificar se já tem certificado
+      if (orderStatus === 'Concluído') {
+        const { data: certExistente } = await supabase
+          .from('certificados')
+          .select('id')
+          .eq('venda_id', vendaId)
+          .maybeSingle();
+
+        if (!certExistente) {
+          // Buscar dados da venda para criar certificado
+          const { data: vendaData } = await supabase
+            .from('vendas')
+            .select('*')
+            .eq('id', vendaId)
+            .single();
+
+          if (vendaData) {
+            const productName = data.data?.productData?.productNameSelected || '';
+            const tipoCertificado = productName.match(/A[13]/i)?.[0]?.toUpperCase() || 'A1';
+            const validity = data.data?.productData?.validity || '1 ano';
+            const anos = parseInt(validity) || 1;
+            const validade = new Date();
+            validade.setFullYear(validade.getFullYear() + anos);
+            const precoCustoValue = parseCurrencyToNumber(data.data?.productData?.value);
+
+            const { data: certCriado } = await supabase.from('certificados').insert([{
+              tipo: tipoCertificado,
+              documento: vendaData.pedido_segura,
+              cliente: vendaData.cliente,
+              validade: validade.toISOString().split('T')[0],
+              status: 'Emitido',
+              venda_id: vendaId,
+              preco_custo: precoCustoValue,
+              user_id: user.id
+            }]).select().single();
+
+            // Quitar conta a pagar se houver pagamento
+            if (certCriado && precoCustoValue > 0 && hasPayment) {
+              await new Promise(resolve => setTimeout(resolve, 500));
+              const sortedPayments = [...(data.data?.paymentHistory || [])].sort((a: any, b: any) =>
+                new Date(b.date).getTime() - new Date(a.date).getTime()
+              );
+              const paymentDate = sortedPayments[0]?.date;
+              if (paymentDate) {
+                await supabase.from('contas_a_pagar')
+                  .update({ status: 'Pago' as const, data_pagamento: paymentDate.split(' ')[0] })
+                  .eq('certificado_id', certCriado.id)
+                  .eq('status', 'Pendente');
+              }
+            }
+          }
+        }
+      }
+
+      // Se tem agendamento no status, verificar se já existe
+      if (orderStatus?.includes('Agendado')) {
+        const { data: agendExistente } = await supabase
+          .from('agendamentos')
+          .select('id')
+          .eq('venda_id', vendaId)
+          .maybeSingle();
+
+        if (!agendExistente) {
+          const dateMatch = orderStatus.match(/Agendado Dia (\d{2}\/\d{2}\/\d{4}) (\d{2}:\d{2})/);
+          if (dateMatch) {
+            const [, dateStr, timeStr] = dateMatch;
+            const [day, month, year] = dateStr.split('/');
+            const [hour, minute] = timeStr.split(':');
+            const agendDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute));
+
+            const { data: vendaData } = await supabase.from('vendas').select('cliente_id, pedido_segura').eq('id', vendaId).single();
+            await supabase.from('agendamentos').insert([{
+              venda_id: vendaId,
+              pedido_segura: vendaData?.pedido_segura || pedidoSegura,
+              cliente_id: vendaData?.cliente_id,
+              data_agendamento: agendDate.toISOString(),
+              status: 'Agendado',
+              user_id: user.id
+            }]);
+          }
+        }
+      }
+
+      await refresh();
+      toast({ title: "Status atualizado", description: `Pedido ${pedidoSegura}: ${orderStatus || 'sem alteração'}` });
+    } catch (error: any) {
+      console.error('Erro ao atualizar status:', error);
+      toast({ title: "Erro ao atualizar status", description: error.message, variant: "destructive" });
+    } finally {
+      setRefreshingStatus(null);
+    }
+  };
+
+  const handleRefreshAll = async () => {
+    if (!user) return;
+    setRefreshingAll(true);
+    let updated = 0;
+    const pendentes = vendas.filter(v => v.status === 'Pendente');
+    for (const venda of pendentes) {
+      try {
+        await handleRefreshStatus(venda.id, venda.pedidoSegura);
+        updated++;
+      } catch (e) {
+        // continua com as próximas
+      }
+    }
+    setRefreshingAll(false);
+    toast({ title: "Atualização concluída", description: `${updated} venda(s) pendente(s) verificada(s).` });
+  };
+
   return <Layout>
       <AppNavigation />
 
@@ -280,7 +418,10 @@ const Vendas = () => {
             <h1 className="text-3xl font-bold text-slate-900">Vendas</h1>
             <p className="text-slate-600 mt-2">Gerencie todas as vendas de certificados digitais</p>
           </div>
-          
+          <Button onClick={handleRefreshAll} variant="outline" disabled={refreshingAll}>
+            {refreshingAll ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+            {refreshingAll ? "Atualizando..." : "Atualizar Status"}
+          </Button>
         </div>
 
         <Card className="p-6">
@@ -388,6 +529,15 @@ const Vendas = () => {
                             <TooltipContent>Ver fatura</TooltipContent>
                           </Tooltip>
                         )}
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button size="sm" variant="outline" onClick={() => handleRefreshStatus(venda.id, venda.pedidoSegura)} disabled={refreshingStatus === venda.id}>
+                              {refreshingStatus === venda.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Atualizar status</TooltipContent>
+                        </Tooltip>
                         
                         <Tooltip>
                           <TooltipTrigger asChild>
