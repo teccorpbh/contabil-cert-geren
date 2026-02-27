@@ -291,6 +291,12 @@ const NovaVenda = () => {
       const orderStatus = pedidoData?.data?.orderDetails?.status;
       const vendaStatus = orderStatus === 'Concluído' ? 'Emitido' : 'Pendente';
       
+      // Determinar status de pagamento baseado no paymentHistory
+      const hasPayment = pedidoData?.data?.paymentHistory?.some(
+        (p) => p.action?.toLowerCase().includes('aprovad') || p.action?.toLowerCase().includes('paid') || p.message?.toLowerCase().includes('aprovad')
+      );
+      const statusPagamento = hasPayment ? 'Pago' : 'Pendente';
+      
       const vendedorSelecionado = vendedores.find(v => v.id === responsavel);
       
       // Determinar nome do cliente de forma robusta
@@ -336,7 +342,7 @@ const NovaVenda = () => {
           vendedor_id: responsavel,
           indicador_id: indicador && indicador !== "none" ? indicador : null,
           status: vendaStatus,
-          status_pagamento: 'Pendente',
+          status_pagamento: statusPagamento,
           data: `${dataVenda}T12:00:00Z`,
           user_id: user.id,
         }])
