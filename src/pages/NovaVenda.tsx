@@ -389,7 +389,7 @@ const NovaVenda = () => {
           // Extrair preço de custo do productData
           const precoCustoValue = parseCurrencyToNumber(pedidoData?.data?.productData?.value);
           
-          await supabase.from('certificados').insert([{
+          const { data: certCriado } = await supabase.from('certificados').insert([{
             tipo: tipoCertificado,
             documento: pedidoSegura,
             cliente: nomeCliente,
@@ -398,7 +398,33 @@ const NovaVenda = () => {
             venda_id: vendaCriada.id,
             preco_custo: precoCustoValue,
             user_id: user.id
-          }]);
+          }]).select().single();
+
+          // Se houver data de pagamento no paymentHistory, quitar a conta a pagar automaticamente
+          if (certCriado && precoCustoValue > 0 && pedidoData?.data?.paymentHistory?.length) {
+            // Buscar a data de pagamento mais recente com status de pagamento bem-sucedido
+            const sortedPayments = [...pedidoData.data.paymentHistory].sort((a, b) => {
+              return new Date(b.date).getTime() - new Date(a.date).getTime();
+            });
+            
+            const paymentDate = sortedPayments[0]?.date;
+            if (paymentDate) {
+              const datePart = paymentDate.split(' ')[0]; // yyyy-MM-dd
+              
+              // Aguardar um momento para o trigger criar a conta a pagar
+              await new Promise(resolve => setTimeout(resolve, 500));
+              
+              // Buscar e atualizar a conta a pagar criada pelo trigger
+              await supabase
+                .from('contas_a_pagar')
+                .update({
+                  status: 'Pago' as const,
+                  data_pagamento: datePart
+                })
+                .eq('certificado_id', certCriado.id)
+                .eq('status', 'Pendente');
+            }
+          }
         }
 
       toast({
